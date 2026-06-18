@@ -1,0 +1,230 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>YouTube to Reference Assets</title>
+<style>
+  :root{
+    --bg:#0b0f17; --panel:#121826; --panel2:#0e1420; --line:#222c3f;
+    --text:#e8edf6; --muted:#9aa7bd; --accent:#ff3b30; --accent2:#5b8cff;
+    --ok:#34d399; --warn:#fbbf24; --err:#f87171;
+    --radius:16px;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0; background:radial-gradient(1200px 600px at 50% -10%, #16203a 0%, var(--bg) 55%);
+    color:var(--text); font:15px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    min-height:100vh; display:flex; justify-content:center; padding:40px 16px;
+  }
+  .wrap{width:100%; max-width:760px}
+  .brand{display:flex; align-items:center; gap:12px; margin-bottom:6px}
+  .logo{width:38px;height:38px;border-radius:10px;background:linear-gradient(135deg,var(--accent),#ff7a45);
+    display:grid;place-items:center;font-size:20px}
+  h1{font-size:22px; margin:0; letter-spacing:.2px}
+  .sub{color:var(--muted); margin:2px 0 26px; font-size:14px}
+  .card{background:linear-gradient(180deg,var(--panel),var(--panel2)); border:1px solid var(--line);
+    border-radius:var(--radius); padding:22px; box-shadow:0 20px 50px rgba(0,0,0,.35)}
+  label{display:block; font-size:13px; color:var(--muted); margin-bottom:8px}
+  .row{display:flex; gap:10px}
+  input[type=text]{
+    flex:1; background:#0a0f1a; border:1px solid var(--line); color:var(--text);
+    padding:14px 14px; border-radius:12px; font-size:15px; outline:none; transition:border .15s,box-shadow .15s;
+  }
+  input[type=text]:focus{border-color:var(--accent2); box-shadow:0 0 0 3px rgba(91,140,255,.18)}
+  button{
+    background:linear-gradient(135deg,var(--accent),#ff6a3d); color:#fff; border:0; cursor:pointer;
+    padding:0 22px; border-radius:12px; font-size:15px; font-weight:600; transition:transform .08s,opacity .15s;
+    display:flex; align-items:center; gap:8px;
+  }
+  button:hover{transform:translateY(-1px)}
+  button:disabled{opacity:.5; cursor:not-allowed; transform:none}
+  .hint{color:var(--muted); font-size:12px; margin-top:10px}
+  .paste{background:#1a2336; color:var(--text); padding:6px 12px; border-radius:9px; font-weight:500; font-size:13px}
+
+  .steps{margin-top:22px; display:none}
+  .steps.show{display:block}
+  .step{display:flex; align-items:center; gap:11px; padding:9px 0; color:var(--muted); border-bottom:1px solid #18202f}
+  .step:last-child{border-bottom:0}
+  .dot{width:18px;height:18px;border-radius:50%; border:2px solid #2c3850; flex:none; position:relative}
+  .step.active .dot{border-color:var(--accent2); animation:pulse 1.1s infinite}
+  .step.done .dot{border-color:var(--ok); background:var(--ok)}
+  .step.done .dot::after{content:"";position:absolute;left:4px;top:1px;width:5px;height:9px;border:solid #06281d;border-width:0 2px 2px 0;transform:rotate(45deg)}
+  .step.fail .dot{border-color:var(--err); background:var(--err)}
+  .step.active{color:var(--text)}
+  .step.done{color:var(--text)}
+  @keyframes pulse{0%{box-shadow:0 0 0 0 rgba(91,140,255,.45)}70%{box-shadow:0 0 0 7px rgba(91,140,255,0)}100%{box-shadow:0 0 0 0 rgba(91,140,255,0)}}
+
+  .results{margin-top:18px; display:none; gap:10px; flex-direction:column}
+  .results.show{display:flex}
+  .result{display:flex; align-items:center; gap:12px; background:#0d1626; border:1px solid var(--line);
+    border-radius:12px; padding:13px 15px; text-decoration:none; color:var(--text); transition:border .15s,transform .08s}
+  .result:hover{border-color:var(--accent2); transform:translateY(-1px)}
+  .result .ic{font-size:20px}
+  .result .t{font-weight:600}
+  .result .d{color:var(--muted); font-size:12px}
+  .result .go{margin-left:auto; color:var(--accent2); font-size:13px}
+
+  .logbox{margin-top:16px; display:none}
+  .logbox.show{display:block}
+  .logtoggle{background:none; border:0; color:var(--muted); padding:0; font-size:13px; cursor:pointer}
+  pre.log{background:#070b12; border:1px solid var(--line); border-radius:12px; padding:14px; margin-top:8px;
+    max-height:280px; overflow:auto; font:12px/1.5 ui-monospace,SFMono-Regular,Menlo,monospace; color:#bcd; white-space:pre-wrap}
+  .err{color:var(--err)}
+  .ok{color:var(--ok)}
+  .muted{color:var(--muted)}
+
+  .recent{margin-top:26px}
+  .recent h2{font-size:13px; color:var(--muted); font-weight:600; text-transform:uppercase; letter-spacing:.6px; margin:0 0 10px}
+  .recent a{display:block; color:var(--text); text-decoration:none; padding:8px 0; border-bottom:1px solid #161e2c; font-size:14px}
+  .recent a:hover{color:var(--accent2)}
+  .recent .when{color:var(--muted); font-size:12px}
+  footer{color:var(--muted); font-size:12px; text-align:center; margin-top:26px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="brand">
+    <div class="logo">&#9654;</div>
+    <div>
+      <h1>YouTube to Reference Assets</h1>
+    </div>
+  </div>
+  <p class="sub">Paste a live YouTube link. It builds the External Example asset and the linked Internal Application asset in your Notion Reference Assets database.</p>
+
+  <div class="card">
+    <label for="url">YouTube link</label>
+    <div class="row">
+      <input id="url" type="text" placeholder="https://www.youtube.com/watch?v=..." autocomplete="off" spellcheck="false"/>
+      <button id="paste" class="paste" title="Paste from clipboard">Paste</button>
+      <button id="run">Run</button>
+    </div>
+    <div class="hint" id="hint">The only input is the link. Everything downstream is automatic.</div>
+
+    <div class="steps" id="steps">
+      <div class="step" data-k="extract"><span class="dot"></span><span>yt-dlp extraction, transcript, title, description</span></div>
+      <div class="step" data-k="clean"><span class="dot"></span><span>Transcript cleanup, reused formatter prompt</span></div>
+      <div class="step" data-k="ext"><span class="dot"></span><span>External Example asset, Notion page</span></div>
+      <div class="step" data-k="analyze"><span class="dot"></span><span>Analysis and link teardown</span></div>
+      <div class="step" data-k="int"><span class="dot"></span><span>Internal Application asset, linked Notion page</span></div>
+    </div>
+
+    <div class="results" id="results"></div>
+
+    <div class="logbox" id="logbox">
+      <button class="logtoggle" id="logtoggle">Show live log</button>
+      <pre class="log" id="log" style="display:none"></pre>
+    </div>
+  </div>
+
+  <div class="recent" id="recentWrap" style="display:none">
+    <h2>Recent runs</h2>
+    <div id="recent"></div>
+  </div>
+
+  <footer>Runs locally through your Claude CLI and the yt-reference-pipeline skill.</footer>
+</div>
+
+<script>
+const $ = s => document.querySelector(s);
+const urlEl = $("#url"), runEl = $("#run"), stepsEl = $("#steps"),
+      resultsEl = $("#results"), logEl = $("#log"), logbox = $("#logbox"),
+      hintEl = $("#hint");
+let running = false;
+
+const YT_RE = /^(https?:\/\/)?(www\.)?(youtube\.com\/(watch\?v=|shorts\/|live\/)|youtu\.be\/)[\w-]{6,}/i;
+
+$("#paste").onclick = async () => {
+  try { urlEl.value = (await navigator.clipboard.readText()).trim(); urlEl.focus(); }
+  catch { hintEl.textContent = "Clipboard blocked by the browser. Paste with Ctrl or Cmd V."; }
+};
+$("#logtoggle").onclick = () => {
+  const open = logEl.style.display !== "none";
+  logEl.style.display = open ? "none" : "block";
+  $("#logtoggle").textContent = open ? "Show live log" : "Hide live log";
+};
+urlEl.addEventListener("keydown", e => { if (e.key === "Enter") runEl.click(); });
+
+function setStep(k, state){
+  const el = stepsEl.querySelector(`.step[data-k="${k}"]`);
+  if(!el) return;
+  el.classList.remove("active","done","fail");
+  if(state) el.classList.add(state);
+}
+function resetSteps(){ ["extract","clean","ext","analyze","int"].forEach(k=>setStep(k,null)); }
+function appendLog(line, cls){
+  const span = document.createElement("span");
+  if(cls) span.className = cls;
+  span.textContent = line + "\n";
+  logEl.appendChild(span);
+  logEl.scrollTop = logEl.scrollHeight;
+}
+function addResult(icon, title, desc, url){
+  const a = document.createElement("a");
+  a.className = "result"; a.href = url; a.target = "_blank"; a.rel = "noopener";
+  a.innerHTML = `<span class="ic">${icon}</span><span><div class="t">${title}</div><div class="d">${desc}</div></span><span class="go">Open in Notion &#8594;</span>`;
+  resultsEl.appendChild(a); resultsEl.classList.add("show");
+}
+
+function saveRecent(url, pages){
+  const list = JSON.parse(localStorage.getItem("yt_runs")||"[]");
+  list.unshift({url, pages, at:Date.now()});
+  localStorage.setItem("yt_runs", JSON.stringify(list.slice(0,8)));
+  renderRecent();
+}
+function renderRecent(){
+  const list = JSON.parse(localStorage.getItem("yt_runs")||"[]");
+  if(!list.length) return;
+  $("#recentWrap").style.display = "block";
+  $("#recent").innerHTML = list.map(r=>{
+    const first = (r.pages&&r.pages[0])||r.url;
+    const when = new Date(r.at).toLocaleString();
+    return `<a href="${first}" target="_blank" rel="noopener">${r.url}<div class="when">${when}</div></a>`;
+  }).join("");
+}
+renderRecent();
+
+runEl.onclick = async () => {
+  if(running) return;
+  const url = urlEl.value.trim();
+  if(!YT_RE.test(url)){ hintEl.innerHTML = '<span class="err">That does not look like a YouTube link. Try a watch, shorts, or youtu.be URL.</span>'; return; }
+  running = true; runEl.disabled = true; runEl.textContent = "Running";
+  hintEl.textContent = "Working. This can take a few minutes for a long video.";
+  resetSteps(); stepsEl.classList.add("show");
+  resultsEl.classList.remove("show"); resultsEl.innerHTML = "";
+  logbox.classList.add("show"); logEl.innerHTML = "";
+
+  const seenPages = [];
+  let res;
+  try { res = await fetch("/run", {method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify({url})}); }
+  catch(e){ finishFail("Could not reach the local server."); return; }
+  const {job_id, error} = await res.json();
+  if(error){ finishFail(error); return; }
+
+  const ev = new EventSource("/events?job="+encodeURIComponent(job_id));
+  ev.addEventListener("step", e => { const d = JSON.parse(e.data); setStep(d.key, d.state); });
+  ev.addEventListener("log", e => { const d = JSON.parse(e.data); appendLog(d.line, d.cls); });
+  ev.addEventListener("page", e => {
+    const d = JSON.parse(e.data);
+    if(seenPages.includes(d.url)) return;
+    seenPages.push(d.url);
+    addResult(d.kind==="internal"?"&#129504;":"&#127916;", d.title || (d.kind==="internal"?"Internal Application asset":"External Example asset"), d.url, d.url);
+  });
+  ev.addEventListener("done", e => {
+    const d = JSON.parse(e.data); ev.close();
+    running = false; runEl.disabled = false; runEl.textContent = "Run";
+    if(d.ok){ hintEl.innerHTML = '<span class="ok">Done. Your reference assets are in Notion.</span>'; if(seenPages.length) saveRecent(url, seenPages); }
+    else { finishFailInline(d.error || "The run ended with an error. See the live log."); }
+  });
+  ev.onerror = () => { ev.close(); if(running) finishFail("The event stream dropped. Check the server window."); };
+
+  function finishFailInline(msg){
+    running=false; runEl.disabled=false; runEl.textContent="Run";
+    hintEl.innerHTML = '<span class="err">'+msg+'</span>';
+    ["extract","clean","ext","analyze","int"].forEach(k=>{ const el=stepsEl.querySelector(`.step[data-k="${k}"]`); if(el&&el.classList.contains("active")) setStep(k,"fail"); });
+  }
+  function finishFail(msg){ if(ev) try{ev.close()}catch(_){}; finishFailInline(msg); }
+};
+</script>
+</body>
+</html>
