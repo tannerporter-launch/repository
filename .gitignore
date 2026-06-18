@@ -1,0 +1,4 @@
+__pycache__/
+*.pyc
+teardown_assets/
+/tmp/
