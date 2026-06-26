@@ -24,10 +24,14 @@ Usage
   python3 scripts/yt_transcript.py <id> --no-api      # force local yt-dlp
   python3 scripts/yt_transcript.py <id> --no-install  # never auto-install yt-dlp
 
-Output mirrors the API's shape:
-  {"video_id","language","source","transcript":[{"text","start","duration"}...]}
-or, with --format text, the joined caption lines (with [HH:MM:SS] unless
---no-timestamps).
+Output mirrors the API's shape, plus video metadata:
+  {"video_id","language","source","title","description","channel",
+   "transcript":[{"text","start","duration"}...]}
+or, with --format text, a title/description header followed by the joined
+caption lines (with [HH:MM:SS] unless --no-timestamps).
+
+Note: title/description/channel may be null when the source can't supply them
+(e.g. TranscriptAPI does not always return a description).
 """
 
 from __future__ import annotations
@@ -82,6 +86,17 @@ def render(result: dict, fmt: str, timestamps: bool) -> str:
     if fmt == "json":
         return json.dumps(result, ensure_ascii=False, indent=2)
     lines = []
+    if result.get("title"):
+        lines.append(f"# {result['title']}")
+    if result.get("channel"):
+        lines.append(f"Channel: {result['channel']}")
+    if result.get("description"):
+        lines.append("")
+        lines.append("## Description")
+        lines.append(result["description"])
+    if lines:
+        lines.append("")
+        lines.append("## Transcript")
     for seg in result["transcript"]:
         text = seg["text"]
         if timestamps:
@@ -99,7 +114,7 @@ def try_api(video_id: str, key: str, lang: str | None) -> dict | None:
         "video_url": video_id,
         "format": "json",
         "include_timestamp": "true",
-        "send_metadata": "false",
+        "send_metadata": "true",
     }
     url = f"{API_BASE}?{urllib.parse.urlencode(params)}"
     req = urllib.request.Request(
@@ -119,10 +134,14 @@ def try_api(video_id: str, key: str, lang: str | None) -> dict | None:
         print("[fallback] TranscriptAPI returned no transcript; using yt-dlp.",
               file=sys.stderr)
         return None
+    meta = payload.get("metadata") or {}
     return {
         "video_id": payload.get("video_id", video_id),
         "language": payload.get("language", lang or "unknown"),
         "source": "transcriptapi",
+        "title": meta.get("title"),
+        "description": meta.get("description"),
+        "channel": meta.get("author_name"),
         "transcript": [
             {
                 "text": s.get("text", ""),
@@ -222,6 +241,7 @@ def try_ytdlp(video_id: str, lang: str, auto_install: bool) -> dict:
         out_tmpl = os.path.join(tmp, "%(id)s.%(ext)s")
         cmd = cmd_prefix + [
             "--skip-download",
+            "--write-info-json",
             "--write-subs",
             "--write-auto-subs",
             "--sub-langs", f"{lang}.*,{lang},en.*,en",
@@ -234,6 +254,16 @@ def try_ytdlp(video_id: str, lang: str, auto_install: bool) -> dict:
             raise RuntimeError(
                 "yt-dlp failed to fetch subtitles:\n" + (proc.stderr or proc.stdout)
             )
+        title = description = channel = None
+        info_path = os.path.join(tmp, f"{video_id}.info.json")
+        if os.path.exists(info_path):
+            try:
+                info = json.loads(open(info_path, encoding="utf-8").read())
+                title = info.get("title")
+                description = info.get("description")
+                channel = info.get("channel") or info.get("uploader")
+            except (OSError, ValueError):
+                pass
         files = sorted(os.listdir(tmp))
         sub_files = [f for f in files if f.endswith((".json3", ".vtt"))]
         if not sub_files:
@@ -252,6 +282,9 @@ def try_ytdlp(video_id: str, lang: str, auto_install: bool) -> dict:
         "video_id": video_id,
         "language": detected_lang,
         "source": "yt-dlp",
+        "title": title,
+        "description": description,
+        "channel": channel,
         "transcript": segments,
     }
 

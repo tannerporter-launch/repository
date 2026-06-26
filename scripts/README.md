@@ -46,6 +46,9 @@ Accepts full URLs, `youtu.be/<id>`, `youtube.com/shorts/<id>`,
   "video_id": "dQw4w9WgXcQ",
   "language": "en",
   "source": "yt-dlp",
+  "title": "Rick Astley - Never Gonna Give You Up",
+  "description": "The official video for ...",
+  "channel": "Rick Astley",
   "transcript": [
     { "text": "We're no strangers to love", "start": 18.0, "duration": 3.5 }
   ]
@@ -53,6 +56,9 @@ Accepts full URLs, `youtu.be/<id>`, `youtube.com/shorts/<id>`,
 ```
 
 `source` tells you which path produced the result (`transcriptapi` or `yt-dlp`).
+`title`/`description`/`channel` come from the video metadata; they may be `null`
+when the source can't supply them (TranscriptAPI does not always return a
+description). In `--format text` they render as a header above the transcript.
 
 ## Requirements & notes
 
