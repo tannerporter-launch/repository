@@ -112,5 +112,43 @@ class TestWriteOutputs(unittest.TestCase):
             self.assertIn("a b", clean)
 
 
+class TestCorrections(unittest.TestCase):
+    glossary = {"rorwaz": "ROAS", "roas": "ROAS", "vssl": "VSL",
+                "facebook": "Facebook", "ab testing": "A/B testing"}
+
+    def test_fixes_whole_words_case_insensitively(self):
+        segs = [{"text": "our Rorwaz and roas on facebook", "start": 0, "duration": 1}]
+        counts = ytt.apply_corrections(segs, self.glossary)
+        self.assertEqual(segs[0]["text"], "our ROAS and ROAS on Facebook")
+        self.assertEqual(counts["ROAS"], 2)
+        self.assertEqual(counts["Facebook"], 1)
+
+    def test_does_not_touch_substrings(self):
+        # "broast" contains "roas" but must not change (word boundary).
+        segs = [{"text": "a broast dinner", "start": 0, "duration": 1}]
+        counts = ytt.apply_corrections(segs, self.glossary)
+        self.assertEqual(segs[0]["text"], "a broast dinner")
+        self.assertEqual(counts, {})
+
+    def test_multiword_phrase(self):
+        segs = [{"text": "run ab testing", "start": 0, "duration": 1}]
+        ytt.apply_corrections(segs, self.glossary)
+        self.assertEqual(segs[0]["text"], "run A/B testing")
+
+    def test_empty_glossary_is_noop(self):
+        segs = [{"text": "unchanged", "start": 0, "duration": 1}]
+        self.assertEqual(ytt.apply_corrections(segs, {}), {})
+        self.assertEqual(segs[0]["text"], "unchanged")
+
+    def test_default_glossary_loads_and_has_roas(self):
+        g = ytt.load_glossary(None)
+        self.assertIn("rorwaz", g)
+        self.assertEqual(g["rorwaz"], "ROAS")
+        self.assertNotIn("_comment", g)  # metadata keys filtered out
+
+    def test_missing_glossary_path_returns_empty(self):
+        self.assertEqual(ytt.load_glossary("/nope/does-not-exist.json"), {})
+
+
 if __name__ == "__main__":
     unittest.main()
