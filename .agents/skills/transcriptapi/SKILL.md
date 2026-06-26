@@ -18,7 +18,7 @@ Full YouTube data toolkit via [TranscriptAPI.com](https://transcriptapi.com). Tr
 
 ## Setup
 
-If `$TRANSCRIPT_API_KEY` is not set, read [references/auth-setup.md](references/auth-setup.md) and follow the instructions there to get and store the key.
+If `$TRANSCRIPT_API_KEY` is not set, ask the user to provide their own TranscriptAPI key (from https://transcriptapi.com) and set it as an environment variable. Do not auto-register an account, and do not write the key to a file.
 
 ## Required Headers
 
@@ -291,3 +291,14 @@ curl -s "https://transcriptapi.com/api/v2/youtube/playlist/videos?continuation=T
 - Use `channel/latest` (free) to check for new uploads before fetching transcripts — pass @handle directly.
 - For research: search → pick videos → fetch transcripts.
 - Free tier: 100 credits, 300 req/min. Starter ($5/mo): 1,000 credits, 300 req/min.
+
+
+## Local fallback (no API key, no third-party account)
+
+If TranscriptAPI is unavailable, rate-limited, or `$TRANSCRIPT_API_KEY` is not set, fall back to the bundled local script, which fetches captions with `yt-dlp`. Run from the repository root:
+
+```bash
+python3 scripts/yt_transcript.py "VIDEO_URL_OR_ID" --format text
+```
+
+It tries TranscriptAPI first (only when a key is set) and automatically falls back to `yt-dlp`, which needs no account. See `scripts/README.md`.

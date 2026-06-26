@@ -18,7 +18,7 @@ Browse playlists and fetch transcripts via [TranscriptAPI.com](https://transcrip
 
 ## Setup
 
-If `$TRANSCRIPT_API_KEY` is not set, read [references/auth-setup.md](references/auth-setup.md) and follow the instructions there to get and store the key.
+If `$TRANSCRIPT_API_KEY` is not set, ask the user to provide their own TranscriptAPI key (from https://transcriptapi.com) and set it as an environment variable. Do not auto-register an account, and do not write the key to a file.
 
 ## Required Headers
 
