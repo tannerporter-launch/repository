@@ -1,0 +1,7 @@
+# Runtime dependency for the local yt-dlp fallback in
+# .claude/skills/youtube/scripts/yt_transcript.py
+#
+# Floor pin: yt-dlp ships YouTube extractor fixes frequently, so keep it FRESH —
+# pin a minimum, not an exact version. If transcript fetching breaks, upgrade:
+#   python3 -m pip install -U yt-dlp
+yt-dlp>=2025.1.1

@@ -1,0 +1,15 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+
+# Local secrets / settings (e.g. TRANSCRIPT_API_KEY) — never commit
+.claude/settings.local.json
+
+# Script output
+/out/
+out/
+
+# OS / editor cruft
+.DS_Store
+*.swp

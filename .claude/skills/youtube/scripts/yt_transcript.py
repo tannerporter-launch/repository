@@ -16,15 +16,20 @@ Attempt order (the fallback "steps in" automatically):
      installed, the script installs it into the current Python environment on
      first use (disable with --no-install).
 
+Requirements: Python 3.9+. The yt-dlp fallback is installed on demand, or pin it
+via requirements.txt. This script lives at
+.claude/skills/youtube/scripts/yt_transcript.py; from inside the skill use
+"${CLAUDE_SKILL_DIR}/scripts/yt_transcript.py".
+
 Usage
 -----
-  python3 scripts/yt_transcript.py "https://youtu.be/dQw4w9WgXcQ"
-  python3 scripts/yt_transcript.py dQw4w9WgXcQ --format json
-  python3 scripts/yt_transcript.py <id> --lang es --no-timestamps
-  python3 scripts/yt_transcript.py <id> --no-api      # force local yt-dlp
-  python3 scripts/yt_transcript.py <id> --no-install  # never auto-install yt-dlp
-  python3 scripts/yt_transcript.py <id> --out ./out   # also save .txt files
-  python3 scripts/yt_transcript.py <id> --list-langs  # list caption languages
+  python3 yt_transcript.py "https://youtu.be/dQw4w9WgXcQ"
+  python3 yt_transcript.py dQw4w9WgXcQ --format json
+  python3 yt_transcript.py <id> --lang es --no-timestamps
+  python3 yt_transcript.py <id> --no-api      # force local yt-dlp
+  python3 yt_transcript.py <id> --no-install  # never auto-install yt-dlp
+  python3 yt_transcript.py <id> --out ./out   # also save .txt files
+  python3 yt_transcript.py <id> --list-langs  # list caption languages
 
 Output mirrors the API's shape, plus video metadata:
   {"video_id","language","source","title","description","channel",
