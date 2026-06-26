@@ -67,7 +67,20 @@ python3 "$SCRIPT" dQw4w9WgXcQ --list-langs
 # Force the keyless local path / never auto-install yt-dlp
 python3 "$SCRIPT" dQw4w9WgXcQ --no-api
 python3 "$SCRIPT" dQw4w9WgXcQ --no-install
+
+# Transcription fixes: applied automatically; disable or use a custom glossary
+python3 "$SCRIPT" dQw4w9WgXcQ --no-fix
+python3 "$SCRIPT" dQw4w9WgXcQ --glossary my_terms.json
 ```
+
+### Fixing transcription errors
+
+Auto-captions mishear jargon ("rorwaz" → **ROAS**, "VSSL" → **VSL**). The script
+applies `.claude/skills/youtube/corrections.json` automatically (whole-word,
+case-insensitive) and reports a `corrections` summary in its JSON. **Edit that
+file to add your own domain terms** (`"misheard": "Correct"`). The skill also
+instructs the agent to proofread remaining context-specific errors after
+fetching. Use `--no-fix` to get the raw transcript.
 
 `source` in the JSON tells you which path produced the result (`transcriptapi`
 or `yt-dlp`). `description` is only available via the `yt-dlp` path — the API's

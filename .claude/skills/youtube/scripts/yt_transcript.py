@@ -30,9 +30,18 @@ Usage
   python3 yt_transcript.py <id> --no-install  # never auto-install yt-dlp
   python3 yt_transcript.py <id> --out ./out   # also save .txt files
   python3 yt_transcript.py <id> --list-langs  # list caption languages
+  python3 yt_transcript.py <id> --no-fix      # skip glossary corrections
+  python3 yt_transcript.py <id> --glossary my_terms.json
 
-Output mirrors the API's shape, plus video metadata:
+Transcription fixes: auto-captions mishear jargon ("rorwaz" -> "ROAS",
+"VSSL" -> "VSL"). The script applies a whole-word, case-insensitive glossary
+(default: the skill's corrections.json — edit it for your domain) unless
+--no-fix is passed. This is a deterministic first pass; the skill also asks the
+agent to proofread remaining context-specific errors.
+
+Output mirrors the API's shape, plus video metadata and a corrections summary:
   {"video_id","language","source","title","description","channel",
+   "corrections":{"ROAS":3,...},
    "transcript":[{"text","start","duration"}...]}
 or, with --format text, a title/description header followed by the joined
 caption lines (with [HH:MM:SS] unless --no-timestamps).
@@ -93,6 +102,50 @@ def seconds_to_hms(seconds: float) -> str:
     return f"{h:02d}:{m:02d}:{s:02d}"
 
 
+# Default glossary lives next to the skill: <skill>/corrections.json
+DEFAULT_GLOSSARY = os.path.join(os.path.dirname(__file__), os.pardir, "corrections.json")
+
+
+def load_glossary(path: str | None) -> dict:
+    """Load a {pattern: replacement} glossary. Returns {} if unavailable."""
+    target = path or DEFAULT_GLOSSARY
+    try:
+        with open(target, encoding="utf-8") as fh:
+            data = json.load(fh)
+    except (OSError, ValueError):
+        if path:  # explicit path that failed is worth surfacing
+            print(f"[corrections] could not read glossary: {target}", file=sys.stderr)
+        return {}
+    if isinstance(data, dict) and "corrections" in data:
+        data = data["corrections"]
+    if not isinstance(data, dict):
+        return {}
+    # ignore comment/metadata keys (leading underscore)
+    return {str(k): str(v) for k, v in data.items() if not str(k).startswith("_")}
+
+
+def apply_corrections(segments: list, glossary: dict) -> dict:
+    """Whole-word, case-insensitive replacements in place. Returns {term: count}."""
+    if not glossary:
+        return {}
+    repl = {k.lower(): v for k, v in glossary.items()}
+    # longest keys first so multi-word phrases win over their parts
+    keys = sorted(glossary, key=len, reverse=True)
+    pattern = re.compile(r"\b(" + "|".join(re.escape(k) for k in keys) + r")\b",
+                         re.IGNORECASE)
+    counts: dict = {}
+
+    def _sub(m):
+        out = repl[m.group(0).lower()]
+        if out != m.group(0):  # only count actual changes
+            counts[out] = counts.get(out, 0) + 1
+        return out
+
+    for seg in segments:
+        seg["text"] = pattern.sub(_sub, seg["text"])
+    return counts
+
+
 def render(result: dict, fmt: str, timestamps: bool) -> str:
     if fmt == "json":
         return json.dumps(result, ensure_ascii=False, indent=2)
@@ -119,11 +172,17 @@ def render(result: dict, fmt: str, timestamps: bool) -> str:
 
 def _header(result: dict) -> str:
     vid = result.get("video_id", "")
+    fixes = result.get("corrections") or {}
+    fix_line = ""
+    if fixes:
+        total = sum(fixes.values())
+        fix_line = f"Glossary fixes applied: {total} ({', '.join(sorted(fixes))})\n"
     return (
         f"{result.get('title') or '(untitled)'}\n"
         f"Channel: {result.get('channel') or 'unknown'}  |  "
         f"Video ID: {vid}  |  Language: {result.get('language') or 'unknown'}\n"
-        f"URL: https://youtu.be/{vid}\n\n"
+        f"URL: https://youtu.be/{vid}\n"
+        f"{fix_line}\n"
         f"DESCRIPTION:\n{result.get('description') or '(none)'}\n"
     )
 
@@ -384,6 +443,11 @@ def main(argv: list[str]) -> int:
                              "transcript_clean.txt into DIR")
     parser.add_argument("--list-langs", action="store_true",
                         help="list available caption languages and exit")
+    parser.add_argument("--glossary", metavar="FILE",
+                        help="JSON glossary of transcription fixes "
+                             "(default: the skill's corrections.json)")
+    parser.add_argument("--no-fix", action="store_true",
+                        help="do not apply glossary corrections to the transcript")
     args = parser.parse_args(argv)
 
     try:
@@ -412,6 +476,17 @@ def main(argv: list[str]) -> int:
         except Exception as exc:  # noqa: BLE001
             print(f"error: {exc}", file=sys.stderr)
             return 1
+
+    # Deterministic transcription-error fixes (e.g. "rorwaz" -> "ROAS").
+    if not args.no_fix:
+        glossary = load_glossary(args.glossary)
+        corrections = apply_corrections(result["transcript"], glossary)
+        result["corrections"] = corrections
+        if corrections:
+            total = sum(corrections.values())
+            print(f"[corrections] applied {total} glossary fix(es): "
+                  + ", ".join(f"{k}×{v}" for k, v in sorted(corrections.items())),
+                  file=sys.stderr)
 
     print(render(result, args.format, args.timestamps))
     if args.out:

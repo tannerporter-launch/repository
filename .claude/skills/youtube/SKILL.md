@@ -33,6 +33,25 @@ python3 "${CLAUDE_SKILL_DIR}/scripts/yt_transcript.py" "VIDEO_URL_OR_ID" --forma
 > transcript metadata returns `title`/`author` but **not** a description
 > (verified against `openapi.json`). The script handles this automatically.
 
+## Fixing transcription errors
+
+YouTube auto-captions routinely mishear domain jargon, acronyms, and brand names
+("rorwaz" → **ROAS**, "VSSL" → **VSL**). Deliver a *corrected* transcript, not
+the raw mangled one:
+
+1. **Automatic glossary pass.** The script applies `corrections.json` (in this
+   skill dir) by default — whole-word, case-insensitive fixes for known terms.
+   Its JSON output includes a `corrections` summary (e.g. `{"ROAS": 3}`). Edit
+   `corrections.json` to add domain terms; pass `--glossary FILE` for a custom
+   one, or `--no-fix` to disable.
+2. **Proofread the long tail.** The glossary only catches known mis-hearings.
+   After fetching, **read the transcript and correct remaining obvious errors in
+   context** — acronyms, brand/product names, numbers, and homophones — using
+   the video's topic (from the title/description) as a guide. When you've
+   cleaned it, say so, and offer the raw version if the user wants it.
+3. If you make a fix that will recur (a reliable mis-hearing → correct term),
+   add it to `corrections.json` so it's fixed automatically next time.
+
 ## Setup (API key — optional)
 
 The script works **without a key** via the `yt-dlp` fallback. To use the faster

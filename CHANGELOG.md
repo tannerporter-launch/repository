@@ -2,6 +2,19 @@
 
 All notable changes to the YouTube skill build.
 
+## [1.2.0] — 2026-06-26
+
+### Added
+- **Transcription-error correction.** Auto-captions mishear jargon ("rorwaz" →
+  ROAS, "VSSL" → VSL). The script now applies an editable glossary
+  (`.claude/skills/youtube/corrections.json`) with whole-word, case-insensitive
+  fixes, applied by default (`--no-fix` to disable, `--glossary FILE` for a
+  custom one). Output gains a `corrections` summary; the `--out` header notes
+  how many fixes were applied. SKILL.md instructs the agent to proofread
+  remaining context-specific errors and to grow the glossary over time.
+- Tests for the glossary loader and corrector (word boundaries, casing,
+  multi-word phrases, no-op cases) — 15 unit tests total.
+
 ## [1.1.0] — 2026-06-26
 
 Audit-driven overhaul for reliability, repeatability, and maintainability.

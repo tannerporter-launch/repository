@@ -1,0 +1,32 @@
+{
+  "_comment": "Deterministic transcription-error fixes applied to YouTube auto-captions. Keys are matched case-insensitively as whole words/phrases (word boundaries); the value is substituted verbatim, so it sets the canonical casing (e.g. acronyms in caps, brands capitalized). Edit freely for your domain — add common mis-hearings on the left, the correct term on the right. Keep keys lowercase. This is applied automatically unless --no-fix is passed; the agent should also proofread remaining context-specific errors.",
+  "corrections": {
+    "rorwaz": "ROAS",
+    "roaz": "ROAS",
+    "row as": "ROAS",
+    "roas": "ROAS",
+    "vssl": "VSL",
+    "vssls": "VSLs",
+    "vsl": "VSL",
+    "vsls": "VSLs",
+    "ugc": "UGC",
+    "cpm": "CPM",
+    "cpc": "CPC",
+    "cpa": "CPA",
+    "cpl": "CPL",
+    "ctr": "CTR",
+    "aov": "AOV",
+    "ltv": "LTV",
+    "roi": "ROI",
+    "kpi": "KPI",
+    "kpis": "KPIs",
+    "ab testing": "A/B testing",
+    "a b testing": "A/B testing",
+    "facebook": "Facebook",
+    "instagram": "Instagram",
+    "youtube": "YouTube",
+    "tiktok": "TikTok",
+    "google": "Google",
+    "shopify": "Shopify"
+  }
+}
