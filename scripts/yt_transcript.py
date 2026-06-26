@@ -23,6 +23,8 @@ Usage
   python3 scripts/yt_transcript.py <id> --lang es --no-timestamps
   python3 scripts/yt_transcript.py <id> --no-api      # force local yt-dlp
   python3 scripts/yt_transcript.py <id> --no-install  # never auto-install yt-dlp
+  python3 scripts/yt_transcript.py <id> --out ./out   # also save .txt files
+  python3 scripts/yt_transcript.py <id> --list-langs  # list caption languages
 
 Output mirrors the API's shape, plus video metadata:
   {"video_id","language","source","title","description","channel",
@@ -44,11 +46,15 @@ import shutil
 import subprocess
 import sys
 import tempfile
+import time
+import urllib.error
 import urllib.parse
 import urllib.request
 
 API_BASE = "https://transcriptapi.com/api/v2/youtube/transcript"
 USER_AGENT = "yt-transcript-fallback/1.0"
+# Transient HTTP statuses worth retrying (timeout, rate-limit, gateway errors).
+RETRY_STATUSES = {408, 429, 500, 502, 503, 504}
 
 
 # --------------------------------------------------------------------------- #
@@ -106,6 +112,36 @@ def render(result: dict, fmt: str, timestamps: bool) -> str:
     return "\n".join(lines)
 
 
+def _header(result: dict) -> str:
+    vid = result.get("video_id", "")
+    return (
+        f"{result.get('title') or '(untitled)'}\n"
+        f"Channel: {result.get('channel') or 'unknown'}  |  "
+        f"Video ID: {vid}  |  Language: {result.get('language') or 'unknown'}\n"
+        f"URL: https://youtu.be/{vid}\n\n"
+        f"DESCRIPTION:\n{result.get('description') or '(none)'}\n"
+    )
+
+
+def write_outputs(result: dict, out_dir: str) -> list[str]:
+    """Write a timestamped and a clean transcript file. Returns the paths."""
+    os.makedirs(out_dir, exist_ok=True)
+    header = _header(result)
+    ts_body = "\n".join(
+        f"[{seconds_to_hms(s['start'])}] {s['text']}" for s in result["transcript"]
+    )
+    clean_body = " ".join(
+        s["text"].strip() for s in result["transcript"] if s["text"].strip()
+    )
+    ts_path = os.path.join(out_dir, "transcript_timestamped.txt")
+    clean_path = os.path.join(out_dir, "transcript_clean.txt")
+    with open(ts_path, "w", encoding="utf-8") as fh:
+        fh.write(header + "\n=== TRANSCRIPT (timestamped) ===\n" + ts_body + "\n")
+    with open(clean_path, "w", encoding="utf-8") as fh:
+        fh.write(header + "\n=== TRANSCRIPT (clean) ===\n" + clean_body + "\n")
+    return [ts_path, clean_path]
+
+
 # --------------------------------------------------------------------------- #
 # Source 1: TranscriptAPI (only when a key is present)
 # --------------------------------------------------------------------------- #
@@ -121,11 +157,27 @@ def try_api(video_id: str, key: str, lang: str | None) -> dict | None:
         url,
         headers={"Authorization": f"Bearer {key}", "User-Agent": USER_AGENT},
     )
-    try:
-        with urllib.request.urlopen(req, timeout=30) as resp:
-            payload = json.loads(resp.read().decode("utf-8"))
-    except Exception as exc:  # noqa: BLE001 - any failure means fall back
-        print(f"[fallback] TranscriptAPI unavailable ({exc}); using yt-dlp.",
+    payload = None
+    last_exc = None
+    for attempt in range(3):  # up to 2 retries on transient failures
+        try:
+            with urllib.request.urlopen(req, timeout=30) as resp:
+                payload = json.loads(resp.read().decode("utf-8"))
+            break
+        except urllib.error.HTTPError as exc:
+            last_exc = exc
+            if exc.code in RETRY_STATUSES and attempt < 2:
+                wait = 2 ** attempt  # 1s, 2s
+                print(f"[retry] TranscriptAPI {exc.code}; retrying in {wait}s.",
+                      file=sys.stderr)
+                time.sleep(wait)
+                continue
+            break  # non-transient (e.g. 401/402/404) — fall back immediately
+        except Exception as exc:  # noqa: BLE001 - network errors, etc.
+            last_exc = exc
+            break
+    if payload is None:
+        print(f"[fallback] TranscriptAPI unavailable ({last_exc}); using yt-dlp.",
               file=sys.stderr)
         return None
 
@@ -289,6 +341,24 @@ def try_ytdlp(video_id: str, lang: str, auto_install: bool) -> dict:
     }
 
 
+def list_langs(video_id: str, auto_install: bool) -> dict:
+    """Return available caption languages (manual + auto-generated)."""
+    cmd_prefix = ensure_ytdlp(auto_install)
+    url = f"https://www.youtube.com/watch?v={video_id}"
+    proc = subprocess.run(
+        cmd_prefix + ["--skip-download", "--dump-single-json", url],
+        capture_output=True, text=True,
+    )
+    if proc.returncode != 0:
+        raise RuntimeError("yt-dlp failed to read video info:\n" +
+                           (proc.stderr or proc.stdout))
+    info = json.loads(proc.stdout)
+    return {
+        "manual": sorted((info.get("subtitles") or {}).keys()),
+        "auto": sorted((info.get("automatic_captions") or {}).keys()),
+    }
+
+
 # --------------------------------------------------------------------------- #
 # Main
 # --------------------------------------------------------------------------- #
@@ -304,6 +374,11 @@ def main(argv: list[str]) -> int:
                         help="skip TranscriptAPI even if a key is set; use yt-dlp directly")
     parser.add_argument("--no-install", dest="auto_install", action="store_false",
                         help="do not auto-install yt-dlp if it is missing")
+    parser.add_argument("--out", metavar="DIR",
+                        help="also write transcript_timestamped.txt and "
+                             "transcript_clean.txt into DIR")
+    parser.add_argument("--list-langs", action="store_true",
+                        help="list available caption languages and exit")
     args = parser.parse_args(argv)
 
     try:
@@ -311,6 +386,15 @@ def main(argv: list[str]) -> int:
     except ValueError as exc:
         print(f"error: {exc}", file=sys.stderr)
         return 2
+
+    if args.list_langs:
+        try:
+            langs = list_langs(video_id, args.auto_install)
+        except Exception as exc:  # noqa: BLE001
+            print(f"error: {exc}", file=sys.stderr)
+            return 1
+        print(json.dumps(langs, ensure_ascii=False, indent=2))
+        return 0
 
     result = None
     key = os.environ.get("TRANSCRIPT_API_KEY")
@@ -325,6 +409,9 @@ def main(argv: list[str]) -> int:
             return 1
 
     print(render(result, args.format, args.timestamps))
+    if args.out:
+        paths = write_outputs(result, args.out)
+        print("\n[saved] " + ", ".join(paths), file=sys.stderr)
     return 0
 
 

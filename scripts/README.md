@@ -32,7 +32,28 @@ python3 scripts/yt_transcript.py dQw4w9WgXcQ --no-timestamps
 python3 scripts/yt_transcript.py <id> --lang es
 python3 scripts/yt_transcript.py <id> --no-api
 python3 scripts/yt_transcript.py <id> --no-install
+
+# Also save files: transcript_timestamped.txt + transcript_clean.txt into ./out
+python3 scripts/yt_transcript.py <id> --out ./out
+
+# List the caption languages available for a video, then exit
+python3 scripts/yt_transcript.py <id> --list-langs
 ```
+
+### Flags
+
+| Flag | Effect |
+| --- | --- |
+| `--format text\|json` | Output shape (default `text`). |
+| `--lang CODE` | Preferred caption language (default `en`). |
+| `--no-timestamps` | Omit `[HH:MM:SS]` prefixes in text output. |
+| `--out DIR` | Also write `transcript_timestamped.txt` + `transcript_clean.txt` (each with a title/description header) into `DIR`. |
+| `--list-langs` | Print available manual + auto caption languages as JSON, then exit. |
+| `--no-api` | Skip TranscriptAPI even if a key is set; go straight to `yt-dlp`. |
+| `--no-install` | Never auto-install `yt-dlp`. |
+
+The API path automatically retries transient failures (HTTP 408/429/5xx, up to
+two retries with backoff) before falling back to `yt-dlp`.
 
 Accepts full URLs, `youtu.be/<id>`, `youtube.com/shorts/<id>`,
 `youtube.com/embed/<id>`, or a bare 11-character video ID.
@@ -67,3 +88,22 @@ description). In `--format text` they render as a header above the transcript.
   `youtube.com` is blocked at the proxy, the local path will fail with a clear
   proxy error — run it from a machine with normal egress.
 - Exit codes: `0` success, `1` fetch/parse failure, `2` bad video argument.
+
+## Network access (allowlist)
+
+In restricted environments (e.g. Claude Code on the web), outbound traffic is
+filtered. Allow these hosts in the environment's network policy or every request
+fails with a proxy `403`:
+
+- `transcriptapi.com` — the API path
+- `youtube.com`, `googlevideo.com`, `ytimg.com` — the `yt-dlp` fallback path
+
+## Maintenance note — `skills-lock.json`
+
+`skills-lock.json` (repo root) records the **original upstream hashes** of the
+12 installed skills. Because the skills were hardened locally (the
+`references/auth-setup.md` token-bypass files were removed and the setup
+sections rewritten), those hashes no longer match the working copies. This is
+expected. Be aware that running `npx skills update` may flag the drift and try
+to restore the upstream versions — **including the removed auth-bypass file** —
+so review any such update before accepting it.

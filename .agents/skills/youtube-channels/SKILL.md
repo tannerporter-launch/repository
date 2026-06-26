@@ -20,6 +20,10 @@ YouTube channel tools via [TranscriptAPI.com](https://transcriptapi.com).
 
 If `$TRANSCRIPT_API_KEY` is not set, ask the user to provide their own TranscriptAPI key (from https://transcriptapi.com) and set it as an environment variable. Do not auto-register an account, and do not write the key to a file.
 
+## Network access
+
+In locked-down environments `transcriptapi.com` must be reachable, or requests fail with a proxy 403. Allowlist it in the environment's network policy.
+
 ## Required Headers
 
 Every request needs two headers:

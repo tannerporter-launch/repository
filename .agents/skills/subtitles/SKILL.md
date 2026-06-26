@@ -20,6 +20,26 @@ Fetch YouTube video subtitles via [TranscriptAPI.com](https://transcriptapi.com)
 
 If `$TRANSCRIPT_API_KEY` is not set, ask the user to provide their own TranscriptAPI key (from https://transcriptapi.com) and set it as an environment variable. Do not auto-register an account, and do not write the key to a file.
 
+## Recommended: one resilient command
+
+For a transcript (plus title + description) in a single step, prefer the bundled script over the raw `curl` calls below. It uses TranscriptAPI when `$TRANSCRIPT_API_KEY` is set and **automatically falls back to local `yt-dlp` on any failure** — bad or expired key (401), no credits (402), network block (403), or a video with no captions. Run from the repository root:
+
+```bash
+python3 scripts/yt_transcript.py "VIDEO_URL_OR_ID" --format json --out ./out
+```
+
+- `--out DIR` also writes a timestamped and a clean transcript file (each with a title/description header). Omit it to print to stdout.
+- `--format text` for readable text, `--lang es` to choose a language, `--list-langs` to see what captions exist.
+
+> The **description** comes only from the `yt-dlp` path — TranscriptAPI returns title/author but not the description, so prefer this script whenever a description is needed. The API endpoints below remain available for other uses (search, channels, playlists). See `scripts/README.md`.
+
+## Network access
+
+In locked-down environments these hosts must be reachable, or requests fail with a proxy 403. Allowlist them in the environment's network policy:
+
+- `transcriptapi.com` — the API
+- `youtube.com`, `googlevideo.com`, `ytimg.com` — only needed for the local `yt-dlp` fallback
+
 ## Required Headers
 
 Every request needs two headers:
@@ -100,14 +120,3 @@ curl -s "https://transcriptapi.com/api/v2/youtube/transcript\
 | 408      | Timeout          | Retry once after 2s                            |
 
 1 credit per request. Free tier: 100 credits, 300 req/min.
-
-
-## Local fallback (no API key, no third-party account)
-
-If TranscriptAPI is unavailable, rate-limited, or `$TRANSCRIPT_API_KEY` is not set, fall back to the bundled local script, which fetches captions with `yt-dlp`. Run from the repository root:
-
-```bash
-python3 scripts/yt_transcript.py "VIDEO_URL_OR_ID" --format text
-```
-
-It tries TranscriptAPI first (only when a key is set) and automatically falls back to `yt-dlp`, which needs no account. See `scripts/README.md`.
