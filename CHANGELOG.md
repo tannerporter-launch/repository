@@ -2,6 +2,26 @@
 
 All notable changes to the YouTube skill build.
 
+## [1.3.0] — 2026-06-26
+
+### Added
+- **`reconstruct-transcript` skill.** Paste any raw/auto-generated transcript
+  (meeting, sales/client call, interview, video) and get a faithful
+  reconstructed transcript (clear speaker labels, fixed errors, `[unclear]` /
+  `[low confidence]` / `[Speaker unclear]` markers, no omissions) plus: a
+  complete summary, sequential **action items categorized by business role**
+  (task / context / why it matters / timing), objections-risks-friction,
+  sales/strategy insights (pain points, buying signals, decision criteria,
+  urgency, budget signals, next best step, follow-up angle), and key facts.
+- **Learning loop / memory.** User-provided fixes are remembered in committed
+  files: term-level mis-hearings → `corrections.json` (auto-applied
+  everywhere); rules/preferences/participant-roles →
+  `reconstruct-transcript/learned_rules.md`. The skill identifies a provided
+  fix, stores it in the right place, and confirms.
+- **`correct_text.py`** — applies the shared glossary to arbitrary pasted text
+  (file or stdin), so remembered term fixes also apply to non-fetched
+  transcripts. 4 new tests (19 total).
+
 ## [1.2.0] — 2026-06-26
 
 ### Added
