@@ -1,27 +1,51 @@
-# YouTube Skill (Claude Code)
+# YouTube & Transcript Skills (Claude Code)
 
-An internal Claude Code skill for working with YouTube — **transcripts, video/
-channel search, channel browsing, and playlists** — backed by
-[transcriptapi.com](https://transcriptapi.com) with a **keyless local `yt-dlp`
-fallback** so transcripts work even with no API key or when the API is down.
+Internal Claude Code skills for YouTube and transcripts:
+
+- **`youtube`** — fetch transcripts, video/channel search, channel browsing, and
+  playlists via [transcriptapi.com](https://transcriptapi.com) with a **keyless
+  local `yt-dlp` fallback**. Auto-fixes known mis-transcriptions.
+- **`reconstruct-transcript`** — turn any pasted/auto-generated transcript
+  (meeting, sales call, interview) into a faithful **reconstructed transcript**
+  plus summary, sequential **action items by role**, objections/risks, sales
+  insights, and key facts. **Learns** the corrections you provide over time.
 
 ## Layout
 
 ```
 .claude/skills/
-  youtube/                # primary skill (full toolkit)
+  youtube/                       # fetch + correct transcripts
     SKILL.md
-    scripts/yt_transcript.py   # API → yt-dlp fallback, emits title/desc/transcript
-  transcript/             # thin alias → youtube
-  youtube-full/           # thin alias → youtube
-tests/                    # offline unit tests
-.github/workflows/ci.yml  # runs the tests on push/PR
-requirements.txt          # yt-dlp floor pin
+    scripts/yt_transcript.py     # API → yt-dlp fallback; applies corrections.json
+    corrections.json             # term glossary (misheard → correct) — MEMORY
+  transcript/ , youtube-full/    # thin aliases → youtube
+  reconstruct-transcript/        # clean + analyze a pasted transcript
+    SKILL.md
+    learned_rules.md             # non-term learnings (roles, formatting) — MEMORY
+    scripts/correct_text.py      # apply the glossary to any text
+tests/                           # offline unit tests
+.github/workflows/ci.yml         # runs the tests on push/PR
+requirements.txt                 # yt-dlp floor pin
 ```
 
 Skills live under `.claude/skills/` because that is where **Claude Code
 discovers project skills** (verified: see CHANGELOG). They load automatically in
 any session opened on this repo.
+
+## Remembering corrections (the learning loop)
+
+Fixes you provide are stored in committed files, so they persist across sessions:
+
+- **Term fixes** (a word/name/tool/acronym consistently misheard → correct form)
+  go in **`.claude/skills/youtube/corrections.json`**. These are applied
+  automatically to both fetched and pasted transcripts (whole-word,
+  case-insensitive). Edit it directly or just tell me "X should be Y".
+- **Rules & preferences** (participant↔role, speaker patterns, formatting,
+  recurring structural fixes) go in
+  **`.claude/skills/reconstruct-transcript/learned_rules.md`**.
+
+When you paste a corrected transcript or say "remember that …", I identify the
+fix, store it in the right place, and confirm what I saved.
 
 ## Setup
 
