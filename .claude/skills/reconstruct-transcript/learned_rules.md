@@ -43,3 +43,16 @@ or fact rather than a single word swap. Keep entries dated and specific.
   phrase; fix by context.
 - 2026-06-27: **Andromeda** = Meta's ad-delivery AI system; **CBO** = Campaign
   Budget Optimization; **VSL** = Video Sales Letter. Keep capitalization.
+
+### Dev / mobile tooling (from the "Claude Code mobile apps" course)
+- 2026-06-27: Auto-captions mangle **Claude/Claude Code** as "cloud code",
+  "clot", "claw", "clad", "clod" and **Anthropic** as "entropic", "Enro". These
+  are real words / too ambiguous for the global glossary — fix by context to
+  **Claude / Claude Code / Anthropic**. (Unambiguous spellings like "enthropic",
+  "superbase" ARE in corrections.json.)
+- 2026-06-27: Other context-only dev fixes: "anti-gravity" → **Antigravity**
+  (Google IDE); "dribble" → **Dribbble**; "platform.cloud.com" →
+  **platform.claude.com**; "claude.ai/lo" → **claude.ai/code**;
+  "Mifflin St(j)eor" equation; "Nick Sarah/Sarrive" → **Nick Saraev**.
+- 2026-06-27: Glossary canonicalizes: Supabase, PostgREST, Antigravity, Expo Go,
+  React Native, Excalidraw, TestFlight, MyFitnessPal, Claude Code, Anthropic.

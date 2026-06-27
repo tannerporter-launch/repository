@@ -36,6 +36,18 @@
     "youtube": "YouTube",
     "tiktok": "TikTok",
     "google": "Google",
-    "shopify": "Shopify"
+    "shopify": "Shopify",
+    "claude code": "Claude Code",
+    "anthropic": "Anthropic",
+    "enthropic": "Anthropic",
+    "supabase": "Supabase",
+    "superbase": "Supabase",
+    "postgrest": "PostgREST",
+    "antigravity": "Antigravity",
+    "expo go": "Expo Go",
+    "react native": "React Native",
+    "excaladraw": "Excalidraw",
+    "testflight": "TestFlight",
+    "myfitnesspal": "MyFitnessPal"
   }
 }
