@@ -56,3 +56,14 @@ or fact rather than a single word swap. Keep entries dated and specific.
   "Mifflin St(j)eor" equation; "Nick Sarah/Sarrive" → **Nick Saraev**.
 - 2026-06-27: Glossary canonicalizes: Supabase, PostgREST, Antigravity, Expo Go,
   React Native, Excalidraw, TestFlight, MyFitnessPal, Claude Code, Anthropic.
+
+### Business / AI-consulting (from Nick Saraev videos)
+- 2026-06-27: **Nick Saraev** runs **Maker School** (community on **Skool**,
+  skool.com) and **Leftclick** (AI consulting agency). Single-speaker monologues.
+- 2026-06-27: Context-only fixes (real words — NOT safe for the global glossary):
+  "school" → **Skool** (the platform) when it means the community tool, not a
+  literal school; "Santa" → **Asana** (PM tool) in an access/tooling context;
+  "Tears" / "tears" as a sign-off → **"Cheers."**; a stray "nad" → **n8n**
+  ("random nad workflow" → "n8n workflow").
+- 2026-06-27: Tools in his stack: Make.com, n8n, Instantly (cold email), Apify,
+  Anymailfinder, PandaDoc / Better Proposals, Gumroad, Loom, Upwork.
