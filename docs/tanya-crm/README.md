@@ -8,7 +8,17 @@ This doc set converts three client calls (May discovery, June 11 proposal/close,
 June 22 build check-in) plus the demo/mockup screenshots into a single source of
 truth a builder (AI or human) can execute against.
 
-## Read in this order
+## Start here
+
+**[Client-Software-Planning-Package.md](./Client-Software-Planning-Package.md)** is the primary,
+consolidated deliverable — the full 28-section software planning package (executive summary →
+current/future workflows → personas → user stories → FR/NFR with acceptance criteria → screens →
+data model → statuses → automations → integrations → reporting → notifications → testing → MVP →
+phased roadmap → risks → assumptions → next steps → conflicts), built to the client planning SOP.
+
+The numbered docs below are **supporting detail** referenced by the master package.
+
+## Supporting docs
 
 | # | Doc | What it covers |
 |---|-----|----------------|
