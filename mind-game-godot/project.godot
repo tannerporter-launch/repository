@@ -1,0 +1,30 @@
+; The Mind Game — Godot 4.3+ project
+config_version=5
+
+[application]
+config/name="The Mind Game"
+run/main_scene="res://scenes/main.tscn"
+config/features=PackedStringArray("4.3")
+
+[autoload]
+Profile="*res://scripts/player_profile.gd"
+Telemetry="*res://scripts/telemetry_logger.gd"
+Parser="*res://scripts/semantic_parser.gd"
+StateEngine="*res://scripts/state_engine.gd"
+Registry="*res://scripts/asset_registry.gd"
+Narrative="*res://scripts/narrative_generator.gd"
+RuleBreaker="*res://scripts/rule_breaker_handler.gd"
+InputHub="*res://scripts/input_hub.gd"
+GameState="*res://scripts/game_state.gd"
+
+[display]
+window/size/viewport_width=1280
+window/size/viewport_height=720
+window/stretch/mode="canvas_items"
+window/stretch/aspect="expand"
+
+[input_devices]
+pointing/emulate_touch_from_mouse=true
+
+[rendering]
+renderer/rendering_method="mobile"
