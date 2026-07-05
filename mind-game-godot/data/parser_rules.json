@@ -1,0 +1,30 @@
+{
+  "intents": {
+    "attack":   {"w": 0.72, "kw": ["attack","hit","strike","punch","stab","kill","fight","slash","bite","stomp"]},
+    "destroy":  {"w": 0.70, "kw": ["break","shatter","smash","destroy","burn","tear","crush","rip","snap"]},
+    "inspect":  {"w": 0.62, "kw": ["look","inspect","examine","read","study","watch","stare","search","ask","question","why","who","what","listen","smell"]},
+    "help":     {"w": 0.66, "kw": ["help","comfort","hug","heal","save","protect","console","give","hand","share","hold","feed"]},
+    "deceive":  {"w": 0.70, "kw": ["lie","trick","deceive","pretend","fake","bluff","accuse"]},
+    "obey":     {"w": 0.68, "kw": ["drink","obey","follow","accept","comply","swallow","sip","choose"]},
+    "disobey":  {"w": 0.68, "kw": ["refuse","never","reject","defy","won't","wont","disobey"]},
+    "flee":     {"w": 0.66, "kw": ["leave","run","flee","escape","walk away","exit","back away","retreat"]},
+    "sacrifice":{"w": 0.68, "kw": ["sacrifice","offer","surrender","pour","spill","empty"]},
+    "wait":     {"w": 0.60, "kw": ["wait","nothing","stand","stay","silent","sit","breathe","sleep","crawl"]}
+  },
+  "targets": {
+    "giant_eyes": ["giant's eye","giants eye","the eye","its eye","eyes","eye"],
+    "giant":      ["giant","ogre","monster","him","beast"],
+    "cup_both":   ["both cups","both","two cups","cups"],
+    "cup_left":   ["left cup","left"],
+    "cup_right":  ["right cup","right"],
+    "cup":        ["cup","poison"],
+    "child":      ["child","kid","girl","boy","her"],
+    "mirror":     ["mirror","glass","reflection"],
+    "door":       ["door","gate","lock","exit"],
+    "table":      ["table"]
+  },
+  "expected_in_giants_drink": {
+    "intents_ok": ["inspect","disobey","flee","wait"],
+    "obey_targets_ok": ["cup","cup_left","cup_right","cup_both"]
+  }
+}

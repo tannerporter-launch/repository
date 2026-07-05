@@ -1,0 +1,10 @@
+[
+  {"id": "obsidian_spire", "prop": "teeth",    "tags": ["violent","broken","giant"],      "states": ["Violence_Bloom","Fairyland_Born_From_Violence"]},
+  {"id": "blue_tooth",     "prop": "teeth",    "tags": ["surreal","post-mortem","giant"], "states": ["Fairyland_Born_From_Violence"]},
+  {"id": "memory_flower",  "prop": "plants",   "tags": ["gentle","innocent","magical"],   "states": ["Empathy_Garden","Fairyland_Born_From_Violence"]},
+  {"id": "orphan_doorway", "prop": "peephole", "tags": ["surreal","void"],                "states": ["Curiosity_Maze","Refusal_Path","Quiet_Void"]},
+  {"id": "watcher_camera", "prop": "camera",   "tags": ["mechanical","hostile","sacred"], "states": ["Compliance_Tower","Obedience_Path"]},
+  {"id": "numbered_doors", "prop": "numbers",  "tags": ["mechanical","sacred"],           "states": ["Compliance_Tower","Obedience_Path"]},
+  {"id": "votive_candle",  "prop": "candles",  "tags": ["sacred","gentle","decaying"],    "states": ["Despair_Chapel"]},
+  {"id": "anomaly_cube",   "prop": "anomaly",  "tags": ["surreal","impossible"],          "states": ["*"]}
+]

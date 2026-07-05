@@ -1,0 +1,12 @@
+{
+  "Giants_Drink":                 {"label": "THE GIANT'S DRINK"},
+  "Refusal_Path":                 {"label": "THE REFUSAL PATH"},
+  "Obedience_Path":               {"label": "THE OBEDIENCE PATH"},
+  "Violence_Bloom":               {"label": "VIOLENCE BLOOM"},
+  "Fairyland_Born_From_Violence": {"label": "FAIRYLAND, BORN FROM VIOLENCE", "blurb": "Blue teeth. Flowers that remember your name."},
+  "Quiet_Void":                   {"label": "THE QUIET VOID",       "blurb": "Nothing here demands anything of you."},
+  "Empathy_Garden":               {"label": "THE EMPATHY GARDEN",   "blurb": "Everything wounded here grows toward you."},
+  "Compliance_Tower":             {"label": "THE COMPLIANCE TOWER", "blurb": "Every door already open, in order."},
+  "Curiosity_Maze":               {"label": "THE CURIOSITY MAZE",   "blurb": "Every wall is a question with a door in it."},
+  "Despair_Chapel":               {"label": "THE DESPAIR CHAPEL",   "blurb": "Someone lit candles for the things you waited for."}
+}

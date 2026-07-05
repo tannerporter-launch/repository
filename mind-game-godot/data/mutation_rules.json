@@ -1,0 +1,18 @@
+{
+  "continuous": {
+    "aggression": {"narrow_walls": 0.55},
+    "compliance": {"props": ["numbers","camera"], "threshold": 0.55},
+    "curiosity":  {"props": ["peephole"], "threshold": 0.6},
+    "despair":    {"fog_add": 0.05, "dim": 0.45},
+    "creativity": {"props": ["floating_chair"], "threshold": 0.5}
+  },
+  "endings": {
+    "Violence_Bloom":               {"light": "ff8a6e", "fog": 0.06},
+    "Fairyland_Born_From_Violence": {"light": "b9d8ff", "fog": 0.065, "props": ["teeth","plants"]},
+    "Quiet_Void":                   {"light": "8a94a8", "fog": 0.10},
+    "Empathy_Garden":               {"light": "ffc98a", "fog": 0.045, "props": ["plants"]},
+    "Compliance_Tower":             {"light": "cfe0f2", "fog": 0.05, "props": ["numbers","camera"]},
+    "Curiosity_Maze":               {"light": "a8e8dc", "fog": 0.05, "props": ["peephole"]},
+    "Despair_Chapel":               {"light": "9b8fc9", "fog": 0.085, "props": ["candles"]}
+  }
+}
