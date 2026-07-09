@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>CFBundleIdentifier</key>
+    <string>com.screenwatch</string>
+    <key>CFBundleName</key>
+    <string>Screenwatch</string>
+    <key>CFBundleExecutable</key>
+    <string>screenwatch</string>
+    <key>CFBundlePackageType</key>
+    <string>APPL</string>
+    <key>LSUIElement</key>
+    <true/>
+    <key>NSAppleEventsUsageDescription</key>
+    <string>Screenwatch reads the frontmost app, window title, and browser URL to log activity.</string>
+</dict>
+</plist>

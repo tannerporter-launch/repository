@@ -1,0 +1,229 @@
+<title>Screenwatch — System Diagrams</title>
+<style>
+  :root{
+    --page:#f5f4ef; --ink:#26241f; --muted:#6f6a5e;
+    --board:#ffffff; --board-line:#dcd8cc; --dot:#e3e0d6;
+  }
+  @media (prefers-color-scheme: dark){
+    :root{ --page:#1b1a20; --ink:#e8e5dc; --muted:#a29d90; --board-line:#3a3844; --dot:#e7e4da; }
+  }
+  :root[data-theme="dark"]{ --page:#1b1a20; --ink:#e8e5dc; --muted:#a29d90; --board-line:#3a3844; --dot:#e7e4da; }
+  :root[data-theme="light"]{ --page:#f5f4ef; --ink:#26241f; --muted:#6f6a5e; --board-line:#dcd8cc; --dot:#e3e0d6; }
+
+  body{
+    background:var(--page); color:var(--ink);
+    font-family:'Chalkboard SE','Segoe Print','Comic Sans MS',cursive;
+    margin:0; padding:2.5rem 1.25rem 4rem;
+  }
+  .wrap{ max-width:1040px; margin:0 auto; display:flex; flex-direction:column; gap:2.75rem; }
+  header h1{ font-size:2rem; margin:0 0 .35rem; text-wrap:balance; }
+  header p{ margin:0; color:var(--muted); font-size:1.05rem; }
+  figure{ margin:0; display:flex; flex-direction:column; gap:.6rem; }
+  .board{
+    background:var(--board);
+    background-image:radial-gradient(var(--dot) 1.1px, transparent 1.2px);
+    background-size:22px 22px;
+    border:1px solid var(--board-line); border-radius:10px;
+    padding:10px; overflow-x:auto;
+    box-shadow:0 2px 10px rgba(0,0,0,.07);
+  }
+  .board svg{ display:block; width:100%; height:auto; min-width:640px; }
+  figcaption{ color:var(--muted); font-size:.98rem; padding-left:.25rem; }
+  figcaption b{ color:var(--ink); font-weight:600; }
+</style>
+
+<div class="wrap">
+  <header>
+    <h1>Screenwatch: an AI that watches you work &amp; suggests upgrades</h1>
+    <p>a screenshot every 5 seconds → cheap summaries → “how can I economize my workflow?”</p>
+  </header>
+
+  <figure>
+    <div class="board"><svg id="d1" viewBox="0 0 1200 640" role="img" aria-label="System overview loop diagram"></svg></div>
+    <figcaption><b>1 · The loop.</b> Runs entirely in the background — the capture script feeds a daily folder, an agent checks in on it, and the suggestions change how you work, which changes what gets captured next.</figcaption>
+  </figure>
+
+  <figure>
+    <div class="board"><svg id="d2" viewBox="0 0 1200 600" role="img" aria-label="Capture pipeline diagram"></svg></div>
+    <figcaption><b>2 · The capture pipeline.</b> Two streams per 5-second tick: a compressed frame for the eyes, a metadata line for the brain. The tricks on the stickies are what keep storage &amp; cost near zero.</figcaption>
+  </figure>
+
+  <figure>
+    <div class="board"><svg id="d3" viewBox="0 0 1200 700" role="img" aria-label="Analysis funnel diagram"></svg></div>
+    <figcaption><b>3 · The analysis funnel.</b> Text first, vision second: almost everything is answered from the cheap metadata log, and expensive image analysis only runs on a couple dozen frames. Patterns must repeat before they become suggestions.</figcaption>
+  </figure>
+</div>
+
+<script>
+// ---------- tiny excalidraw-style renderer ----------
+let SEED = 7;
+function rnd(){ SEED=(SEED*1664525+1013904223)>>>0; return SEED/4294967296; }
+function j(a){ return (rnd()*2-1)*a; }
+const NS='http://www.w3.org/2000/svg';
+const INK='#1e1e1e';
+const FONT="'Chalkboard SE','Segoe Print','Comic Sans MS',cursive";
+
+function el(svg,name,attrs){ const e=document.createElementNS(NS,name); for(const k in attrs) e.setAttribute(k,attrs[k]); svg.appendChild(e); return e; }
+
+function wobblePath(pts,amp){ // polyline through pts with jittered midpoints
+  let d=`M ${pts[0][0]+j(amp)} ${pts[0][1]+j(amp)}`;
+  for(let i=1;i<pts.length;i++){
+    const [x0,y0]=pts[i-1],[x1,y1]=pts[i];
+    const mx=(x0+x1)/2+j(amp*1.6), my=(y0+y1)/2+j(amp*1.6);
+    d+=` Q ${mx} ${my} ${x1+j(amp)} ${y1+j(amp)}`;
+  }
+  return d;
+}
+function segs(x1,y1,x2,y2){ // split a line into ~60px chunks
+  const dist=Math.hypot(x2-x1,y2-y1), n=Math.max(1,Math.round(dist/70)), pts=[];
+  for(let i=0;i<=n;i++) pts.push([x1+(x2-x1)*i/n, y1+(y2-y1)*i/n]);
+  return pts;
+}
+function rline(svg,x1,y1,x2,y2,color,w){
+  for(let pass=0; pass<2; pass++)
+    el(svg,'path',{d:wobblePath(segs(x1,y1,x2,y2),1.7),stroke:color||INK,fill:'none',
+      'stroke-width':w||1.7,'stroke-linecap':'round',opacity:pass?0.55:1});
+}
+function hachure(svg,x,y,w,h,color){
+  const gap=8;
+  for(let s=gap*0.7; s<w+h; s+=gap+j(1.5)){
+    const p1=[ s<=w ? x+s : x+w,        s<=w ? y : y+(s-w) ];
+    const p2=[ s<=h ? x   : x+(s-h),    s<=h ? y+s : y+h   ];
+    el(svg,'path',{d:wobblePath([p1,p2],1.2),stroke:color,fill:'none','stroke-width':1.1,opacity:.85});
+  }
+}
+function rrect(svg,x,y,w,h,fill,label,fs){
+  if(fill) hachure(svg,x,y,w,h,fill);
+  rline(svg,x,y,x+w,y); rline(svg,x+w,y,x+w,y+h);
+  rline(svg,x+w,y+h,x,y+h); rline(svg,x,y+h,x,y);
+  if(label) text(svg,x+w/2,y+h/2,label,fs||17,'middle');
+}
+function rellipse(svg,cx,cy,rx,ry,fill,label,fs){
+  for(let pass=0;pass<2;pass++){
+    let d='',n=16;
+    for(let i=0;i<=n;i++){
+      const a=i/n*Math.PI*2;
+      const px=cx+Math.cos(a)*(rx+j(2)), py=cy+Math.sin(a)*(ry+j(2));
+      d+=(i?` L ${px} ${py}`:`M ${px} ${py}`);
+    }
+    el(svg,'path',{d:d+' Z',stroke:INK,fill:pass?'none':'none','stroke-width':1.7,
+      'stroke-linejoin':'round',opacity:pass?.5:1});
+  }
+  if(fill) hachure(svg,cx-rx*.72,cy-ry*.72,rx*1.44,ry*1.44,fill);
+  if(label) text(svg,cx,cy,label,fs||17,'middle');
+}
+function arrow(svg,x1,y1,x2,y2,opts){
+  opts=opts||{};
+  let pts;
+  if(opts.via){ // curved through a control point
+    pts=[]; const n=10, cx=opts.via[0], cy=opts.via[1];
+    for(let i=0;i<=n;i++){ const t=i/n;
+      pts.push([(1-t)*(1-t)*x1+2*(1-t)*t*cx+t*t*x2,(1-t)*(1-t)*y1+2*(1-t)*t*cy+t*t*y2]); }
+  } else pts=segs(x1,y1,x2,y2);
+  for(let pass=0;pass<2;pass++)
+    el(svg,'path',{d:wobblePath(pts,1.6),stroke:INK,fill:'none','stroke-width':1.8,
+      'stroke-linecap':'round',opacity:pass?.5:1});
+  // head
+  const [px,py]=pts[pts.length-2], ang=Math.atan2(y2-py,x2-px);
+  for(const da of [0.42,-0.42])
+    rline(svg,x2,y2,x2-14*Math.cos(ang+da),y2-14*Math.sin(ang+da));
+  if(opts.label) text(svg,opts.lx,opts.ly,opts.label,15,'middle','#5b5750');
+}
+function text(svg,x,y,lines,size,anchor,color){
+  if(typeof lines==='string') lines=[lines];
+  const lh=size*1.25, y0=y-(lines.length-1)*lh/2;
+  lines.forEach((ln,i)=>{
+    const t=el(svg,'text',{x:x,y:y0+i*lh,'text-anchor':anchor||'start',
+      'dominant-baseline':'middle',fill:color||INK,
+      style:`font-family:${FONT};font-size:${size}px`});
+    t.textContent=ln;
+  });
+}
+function sticky(svg,x,y,w,h,rot,fill,lines,fs){
+  const g=el(svg,'g',{transform:`rotate(${rot} ${x+w/2} ${y+h/2})`});
+  el(g,'rect',{x:x,y:y,width:w,height:h,fill:fill,opacity:.55,rx:3});
+  rline(g,x,y,x+w,y); rline(g,x+w,y,x+w,y+h); rline(g,x+w,y+h,x,y+h); rline(g,x,y+h,x,y);
+  const lh=(fs||14)*1.25, y0=y+h/2-(lines.length-1)*lh/2;
+  lines.forEach((ln,i)=>{
+    const t=el(g,'text',{x:x+w/2,y:y0+i*lh,'text-anchor':'middle','dominant-baseline':'middle',
+      fill:INK,style:`font-family:${FONT};font-size:${fs||14}px`});
+    t.textContent=ln;
+  });
+}
+const Y='#ffec99',G='#b2f2bb',B='#a5d8ff',R='#ffc9c9',V='#d0bfff';
+
+// ---------- diagram 1 : the loop ----------
+(function(){
+  const s=document.getElementById('d1');
+  // you
+  rellipse(s,150,320,95,62,B,''); text(s,150,320,['you,','working'],18,'middle');
+  // stick figure
+  rellipse(s,150,238,10,10); rline(s,150,248,150,268); rline(s,150,252,136,262); rline(s,150,252,164,262);
+  rrect(s,330,70,235,95,Y,''); text(s,447,102,'capture script',18,'middle'); text(s,447,130,'every 5 seconds',15,'middle','#5b5750');
+  // db cylinder
+  rrect(s,680,70,250,100,B,''); rellipse(s,805,70,125,16,null);
+  text(s,805,105,'daily folder db',18,'middle'); text(s,805,133,'frames + log.jsonl',15,'middle','#5b5750');
+  rrect(s,930,290,240,105,G,''); text(s,1050,322,'cheap pass',18,'middle'); text(s,1050,350,['summarize + count','repeat behaviors'],14,'middle');
+  rrect(s,680,470,250,100,V,''); text(s,805,502,'notes + observations',17,'middle'); text(s,805,530,'ledger (durable)',15,'middle','#5b5750');
+  rrect(s,300,470,290,105,R,''); text(s,445,500,'ask Fable:',18,'middle'); text(s,445,532,'“how can I economize',15,'middle'); text(s,445,552,'my workflow?”',15,'middle');
+  arrow(s,215,268,325,140,{via:[255,175],label:'watches your screen',lx:205,ly:170});
+  arrow(s,565,115,675,115,{});
+  arrow(s,905,175,1010,285,{via:[985,215]});
+  arrow(s,1020,398,935,470,{via:[995,450]});
+  arrow(s,678,522,592,522,{});
+  arrow(s,298,510,190,395,{via:[225,470],label:'suggestions',lx:135,ly:490});
+  text(s,318,620,'hotkeys · faster tools · “want me to build you a chrome extension?”',15,'start','#5b5750');
+  arrow(s,318,612,258,568,{via:[288,600]});
+  sticky(s,395,255,215,84,-3,Y,['runs in the background —','set a /loop and let an','agent check the db'],14);
+})();
+
+// ---------- diagram 2 : capture pipeline ----------
+(function(){
+  const s=document.getElementById('d2');
+  // monitor
+  rrect(s,55,120,190,120,null); rrect(s,70,133,160,80,B);
+  rline(s,150,240,150,268); rline(s,110,268,190,268);
+  text(s,150,300,'your screen',16,'middle');
+  rrect(s,330,90,215,85,Y,''); text(s,437,120,'screenshot',18,'middle'); text(s,437,148,'every 5s',15,'middle','#5b5750');
+  rrect(s,620,90,200,85,Y,''); text(s,720,120,'shrink to 1568px',16,'middle'); text(s,720,148,'(AI vision max)',14,'middle','#5b5750');
+  rrect(s,895,90,215,85,G,''); text(s,1002,120,'WebP · ~40 KB',17,'middle'); text(s,1002,148,'4–5× smaller, legible',13,'middle','#5b5750');
+  rrect(s,330,300,275,95,B,''); text(s,467,330,'frontmost app · window',15,'middle'); text(s,467,355,'· URL · clipboard',15,'middle');
+  rrect(s,700,300,285,95,B,''); text(s,842,330,'log.jsonl',18,'middle'); text(s,842,360,'1 line / 5s — ~free to analyze',13,'middle','#5b5750');
+  // folder
+  rrect(s,610,470,330,90,V,''); rline(s,610,470,650,448); rline(s,650,448,730,448); rline(s,730,448,750,470);
+  text(s,775,502,'~/screenwatch/days/2026-07-08/',15,'middle'); text(s,775,530,'new folder every day',13,'middle','#5b5750');
+  arrow(s,250,180,325,135,{});
+  arrow(s,250,200,325,330,{via:[280,300]});
+  arrow(s,548,132,615,132,{});
+  arrow(s,823,132,890,132,{});
+  arrow(s,1000,178,860,465,{via:[1010,380]});
+  arrow(s,608,348,695,348,{});
+  arrow(s,842,398,800,465,{});
+  sticky(s,70,410,205,80,-4,R,['idle > 90s?','skip the tick'],15);
+  sticky(s,310,455,240,90,3,Y,['same page as last tick?','image only every 30s,','metadata every tick'],13);
+  sticky(s,975,440,190,95,-3,G,['images auto-delete','after 30 days —','notes kept forever'],13);
+})();
+
+// ---------- diagram 3 : analysis funnel ----------
+(function(){
+  const s=document.getElementById('d3');
+  rrect(s,150,50,900,80,B,''); text(s,600,80,'8,640 metadata lines / day  —  text, basically free',17,'middle');
+  text(s,600,112,'apps · windows · urls · dwell time · switch rate',14,'middle','#5b5750');
+  arrow(s,600,132,600,175,{});
+  rrect(s,280,180,640,80,Y,''); text(s,600,210,'~20 sampled frames  —  vision, only where text can’t tell',16,'middle');
+  text(s,600,242,'block transitions · long dwells · churn bursts',14,'middle','#5b5750');
+  arrow(s,600,262,600,305,{});
+  rrect(s,370,310,460,85,V,''); text(s,600,340,'observations ledger',18,'middle');
+  text(s,600,370,'every inefficiency gets a running count',14,'middle','#5b5750');
+  text(s,868,338,'seen 3–4×?  ||||',17,'start');
+  arrow(s,600,398,600,445,{label:'confirmed pattern',lx:715,ly:422});
+  rrect(s,420,450,360,75,G,''); text(s,600,488,'suggest the upgrade',19,'middle');
+  sticky(s,90,520,255,92,-3,Y,['“use the hotkey —','you moused through','that menu 4× today”'],14);
+  sticky(s,415,555,300,90,2,R,['“your $30/m voice tool →','free local one:','250ms → 50ms latency”'],14);
+  sticky(s,800,520,290,95,-2,B,['“this 5-min task repeats','3–4×/day — want a chrome','extension that does it?”'],14);
+  arrow(s,470,528,300,528,{via:[380,510]});
+  arrow(s,600,528,580,552,{});
+  arrow(s,730,528,860,522,{via:[800,505]});
+  text(s,600,678,'≈ 30 minutes back, every day',18,'middle');
+})();
+</script>

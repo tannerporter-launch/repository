@@ -9,6 +9,11 @@ Internal Claude Code skills for YouTube and transcripts:
   (meeting, sales call, interview) into a faithful **reconstructed transcript**
   plus summary, sequential **action items by role**, objections/risks, sales
   insights, and key facts. **Learns** the corrections you provide over time.
+- **`screenwatch`** — analyze a **screen-workflow capture archive** to find
+  *repeated* low-value friction and suggest optimizations (hotkeys, digests,
+  tool swaps, automations). Backed by the self-contained **`screenwatch-kit/`**
+  (cross-platform capture daemon + a tested, dependency-free log aggregator).
+  See [`screenwatch-kit/README.md`](screenwatch-kit/README.md).
 
 ## Layout
 
@@ -23,6 +28,12 @@ Internal Claude Code skills for YouTube and transcripts:
     SKILL.md
     learned_rules.md             # non-term learnings (roles, formatting) — MEMORY
     scripts/correct_text.py      # apply the glossary to any text
+  screenwatch/                   # analyze a screen-workflow capture archive
+    SKILL.md
+    scripts/aggregate.py         # log aggregator (mirrors screenwatch-kit copy)
+screenwatch-kit/                 # standalone capture daemon + aggregator + prompts
+  scripts/aggregate.py           # canonical copy (stdlib-only, tested)
+  mac/ windows/ docs/            # capture scripts, launchd/Task Scheduler, diagrams
 tests/                           # offline unit tests
 .github/workflows/ci.yml         # runs the tests on push/PR
 requirements.txt                 # yt-dlp floor pin
