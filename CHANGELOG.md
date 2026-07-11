@@ -2,6 +2,52 @@
 
 All notable changes to the YouTube skill build.
 
+## [1.5.0] — 2026-07-11
+
+### Added
+- **Screenwatch time-tracking dashboard.** `screenwatch-kit/scripts/dashboard.py`
+  renders the captured metadata into a self-contained HTML dashboard — stat tiles
+  (time tracked, active vs idle, context switches/hour, distinct apps), a
+  time-per-app bar chart, a proportional activity timeline (single day) or a
+  per-day tracked-time trend (`--days N` range), and the repeated-revisit
+  ("polling loop") callouts. Theme-aware (light/dark), colorblind-safe categorical
+  palette in fixed hue order, text in ink tokens, and a table view so identity is
+  never color-alone — following the data-viz method. No screenshots needed (pure
+  time accounting), standard library only, nothing leaves the machine.
+  - New **`/screenwatch dashboard [date | --days N]`** skill command; a
+    byte-identical copy of the script is bundled in the skill (`${CLAUDE_SKILL_DIR}`).
+  - 8 new offline unit tests (duration formatting, fixed palette-slot assignment
+    with `Other` overflow, single- vs multi-day views, self-contained render,
+    untrusted-title escaping, copy-drift guard). Suite now 42 tests; CI
+    byte-compiles both dashboard copies.
+
+## [1.4.0] — 2026-07-09
+
+### Added
+- **Screenwatch kit + skill.** A self-contained implementation of the
+  AI screen-workflow optimization system: a background daemon captures a
+  screenshot + frontmost-app/window/URL metadata every 5s into daily folders,
+  and an AI agent periodically finds *repeated* low-value friction and suggests
+  fixes (hotkeys, morning digests, tool swaps, automations). Repetition is the
+  signal — an inefficiency becomes a suggestion only after it's seen 3+ times.
+  - `screenwatch-kit/` — battle-tested macOS capture loop + launchd config +
+    the permission-wrapper trick (`wrapper.c`), Windows PowerShell capture +
+    Task Scheduler setup, an agent setup prompt with every gotcha, copy-paste
+    analysis prompts, and hand-drawn system diagrams.
+  - **`scripts/aggregate.py`** — the "metadata first, vision second" aggregator
+    the analysis step calls so no agent reads the raw ~8,640-line log into
+    context. Collapses 5s ticks into activity blocks; computes per-app time,
+    context-switch rate, churn bursts, and repeated-revisit ("polling loop")
+    candidates; and selects the ≤30 frames worth actually looking at. Standard
+    library only (Python 3.9+).
+  - **`screenwatch` Claude Code skill** at `.claude/skills/screenwatch/` —
+    `/screenwatch analyze`, `/screenwatch optimize`, `/screenwatch status`. The
+    aggregator is bundled inside the skill (`${CLAUDE_SKILL_DIR}`) as a
+    byte-identical copy of the kit's canonical script.
+  - 15 new offline unit tests for the aggregator (blocks, per-app time, context
+    switches, churn bursts, revisit detection, frame selection) plus a
+    copy-drift guard; CI byte-compiles both aggregator copies.
+
 ## [1.3.0] — 2026-06-26
 
 ### Added
