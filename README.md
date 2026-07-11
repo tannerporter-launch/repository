@@ -9,10 +9,11 @@ Internal Claude Code skills for YouTube and transcripts:
   (meeting, sales call, interview) into a faithful **reconstructed transcript**
   plus summary, sequential **action items by role**, objections/risks, sales
   insights, and key facts. **Learns** the corrections you provide over time.
-- **`screenwatch`** — analyze a **screen-workflow capture archive** to find
-  *repeated* low-value friction and suggest optimizations (hotkeys, digests,
-  tool swaps, automations). Backed by the self-contained **`screenwatch-kit/`**
-  (cross-platform capture daemon + a tested, dependency-free log aggregator).
+- **`screenwatch`** — analyze a **screen-workflow capture archive** to track how
+  time is spent, render a **time-tracking dashboard**, and find *repeated*
+  low-value friction to optimize (hotkeys, digests, tool swaps, automations).
+  Backed by the self-contained **`screenwatch-kit/`** (cross-platform capture
+  daemon + a tested, dependency-free log aggregator and dashboard generator).
   See [`screenwatch-kit/README.md`](screenwatch-kit/README.md).
 
 ## Layout
@@ -31,8 +32,10 @@ Internal Claude Code skills for YouTube and transcripts:
   screenwatch/                   # analyze a screen-workflow capture archive
     SKILL.md
     scripts/aggregate.py         # log aggregator (mirrors screenwatch-kit copy)
+    scripts/dashboard.py         # HTML dashboard generator (mirrors kit copy)
 screenwatch-kit/                 # standalone capture daemon + aggregator + prompts
   scripts/aggregate.py           # canonical copy (stdlib-only, tested)
+  scripts/dashboard.py           # HTML time-tracking dashboard (stdlib-only, tested)
   mac/ windows/ docs/            # capture scripts, launchd/Task Scheduler, diagrams
 tests/                           # offline unit tests
 .github/workflows/ci.yml         # runs the tests on push/PR

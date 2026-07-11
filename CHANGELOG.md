@@ -2,6 +2,25 @@
 
 All notable changes to the YouTube skill build.
 
+## [1.5.0] — 2026-07-11
+
+### Added
+- **Screenwatch time-tracking dashboard.** `screenwatch-kit/scripts/dashboard.py`
+  renders the captured metadata into a self-contained HTML dashboard — stat tiles
+  (time tracked, active vs idle, context switches/hour, distinct apps), a
+  time-per-app bar chart, a proportional activity timeline (single day) or a
+  per-day tracked-time trend (`--days N` range), and the repeated-revisit
+  ("polling loop") callouts. Theme-aware (light/dark), colorblind-safe categorical
+  palette in fixed hue order, text in ink tokens, and a table view so identity is
+  never color-alone — following the data-viz method. No screenshots needed (pure
+  time accounting), standard library only, nothing leaves the machine.
+  - New **`/screenwatch dashboard [date | --days N]`** skill command; a
+    byte-identical copy of the script is bundled in the skill (`${CLAUDE_SKILL_DIR}`).
+  - 8 new offline unit tests (duration formatting, fixed palette-slot assignment
+    with `Other` overflow, single- vs multi-day views, self-contained render,
+    untrusted-title escaping, copy-drift guard). Suite now 42 tests; CI
+    byte-compiles both dashboard copies.
+
 ## [1.4.0] — 2026-07-09
 
 ### Added

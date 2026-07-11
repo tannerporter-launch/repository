@@ -45,6 +45,10 @@ verifies a real screenshot + metadata line landed on disk.
   3.9+; run it directly to see what a day looks like. (A byte-identical copy is
   bundled in the skill so `/screenwatch analyze` can call it via
   `${CLAUDE_SKILL_DIR}`.)
+- `scripts/dashboard.py` — renders a **self-contained HTML time-tracking
+  dashboard** (stat tiles, time-per-app chart, activity timeline or multi-day
+  trend, polling-loop callouts, table view). Theme-aware and colorblind-safe;
+  standard-library only. Also bundled in the skill for `/screenwatch dashboard`.
 - `ANALYSIS-PROMPTS.md` — copy-paste analyze/optimize prompts for any agent.
 - `docs/diagrams.html` — hand-drawn system diagrams (open in a browser).
 
@@ -64,6 +68,14 @@ python3 scripts/aggregate.py --day-dir /path/to/days/2026-07-08
 It prints per-app time, context-switch rate, churn bursts, repeated-revisit
 ("polling loop") candidates, and the short `frames_to_review` list — the only
 frames an agent then needs to actually look at.
+
+For a visual view of where your time goes, render the dashboard:
+
+```bash
+python3 scripts/dashboard.py --days 7      # last 7 days → one HTML file
+python3 scripts/dashboard.py --date 2026-07-08
+# writes ~/screenwatch/dashboards/<label>.html — open it in any browser
+```
 
 ## How it stays cheap (the important design ideas)
 

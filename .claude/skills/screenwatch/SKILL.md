@@ -1,6 +1,6 @@
 ---
 name: screenwatch
-description: Analyze the screenwatch capture archive — build daily activity notes, track recurring workflow inefficiencies, and suggest optimizations. Use for "/screenwatch analyze [date]", "/screenwatch optimize [focus]", "/screenwatch status", or any question about what the user was doing on a past day / how to improve their workflow based on observed behavior.
+description: Analyze the screenwatch capture archive — build daily activity notes, track how time is spent, render a dashboard, track recurring workflow inefficiencies, and suggest optimizations. Use for "/screenwatch analyze [date]", "/screenwatch dashboard [date|--days N]", "/screenwatch optimize [focus]", "/screenwatch status", or any question about what the user was doing on a past day / where their time went / how to improve their workflow based on observed behavior.
 ---
 
 # Screenwatch analysis
@@ -27,6 +27,23 @@ Metadata first, vision second. The JSONL log answers most questions (what apps, 
 4. **Write `~/screenwatch/notes/YYYY-MM-DD.md`**: a short timeline (activity blocks with times), what was worked on, tool inventory, and an "Inefficiencies observed" list with concrete evidence (frame filenames). Also note *positive* patterns worth keeping.
 5. **Update `~/screenwatch/observations.md`**: for each inefficiency, if a matching entry exists increment its count and update `last:`; otherwise add one. Format:
    `- [count: 3, last: 2026-07-08] Opens X via Spotlight → browser → typing URL; a pinned tab or launcher hotkey would be ~5s faster each time. (Seen: 2026-07-06/14-22-10.webp, ...)`
+
+## `dashboard [date | --days N]`
+Render a self-contained HTML time-tracking dashboard from the metadata (no
+screenshots needed — this is pure time accounting, so it's cheap and private).
+Do NOT read `log.jsonl` into context; run the bundled script:
+```bash
+python3 "${CLAUDE_SKILL_DIR}/scripts/dashboard.py" --date YYYY-MM-DD   # one day
+python3 "${CLAUDE_SKILL_DIR}/scripts/dashboard.py" --days 7            # last 7 days
+```
+It writes `~/screenwatch/dashboards/<label>.html` and prints the `file://` path.
+The dashboard shows stat tiles (time tracked, active vs idle, context switches/hr,
+distinct apps), a time-per-app bar chart, a proportional activity timeline (single
+day) or a per-day trend (range), and the repeated-revisit "polling loop"
+candidates. It's theme-aware, colorblind-safe, and includes a table view. Options:
+`--out PATH` for a custom location, `--base PATH` for a non-default archive. After
+generating, tell the user the path and offer to open it (macOS `open`, Windows
+`start`, Linux `xdg-open`).
 
 ## `optimize [focus]`
 1. Read `observations.md` and the last ~7 days of notes.
