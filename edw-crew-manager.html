@@ -1,0 +1,705 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>EDW Crew Manager</title>
+<!--
+DEPLOYMENT (GitHub Pages):
+1. github.com → New Repository → name: edw-crew-manager → Private
+2. Upload this file as index.html
+3. Settings → Pages → Branch: main → / root → Save
+4. URL: https://{username}.github.io/edw-crew-manager/
+5. In the CRM: Settings → Custom Menu Links → Add Link → paste URL → Open in iframe
+
+FIRST-TIME CONFIG:
+1. Fill LOCATION_ID + TOKEN in CONFIG block
+2. Open widget → F12 DevTools → Console → see user table with IDs
+3. Add any office staff IDs to EXCLUDE_USER_IDS[] → re-upload
+-->
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.2/Sortable.min.js"></script>
+<style>
+  :root {
+    --bg: #0f172a;
+    --col-bg: #1e293b;
+    --card-bg: #2d3f55;
+    --card-hover: #35496180;
+    --text: #e2e8f0;
+    --text-muted: #94a3b8;
+    --border: #334155;
+    --accent: #3b82f6;
+    --accent-glow: #3b82f680;
+  }
+
+  * { box-sizing: border-box; }
+
+  html, body {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+  }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica,
+      Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji";
+    font-size: 14px;
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    overflow: hidden;
+  }
+
+  /* ---------- Header ---------- */
+  header {
+    position: sticky;
+    top: 0;
+    z-index: 20;
+    background: var(--col-bg);
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 12px 18px;
+    flex: 0 0 auto;
+  }
+
+  .logo {
+    width: 38px;
+    height: 38px;
+    border-radius: 9px;
+    background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+    color: #fff;
+    font-weight: 800;
+    letter-spacing: 0.5px;
+    font-size: 13px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 auto;
+    box-shadow: 0 2px 8px #1d4ed855;
+  }
+
+  header h1 {
+    font-size: 17px;
+    font-weight: 700;
+    margin: 0;
+    white-space: nowrap;
+  }
+
+  #status {
+    color: var(--text-muted);
+    font-size: 13px;
+    margin-left: 4px;
+    min-height: 18px;
+    flex: 1 1 auto;
+  }
+
+  .btn {
+    background: var(--card-bg);
+    color: var(--text);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 8px 14px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.15s ease, transform 0.1s ease;
+    white-space: nowrap;
+  }
+  .btn:hover { background: #3b4a60; }
+  .btn:active { transform: scale(0.97); }
+
+  /* ---------- Board ---------- */
+  #board {
+    display: flex;
+    flex-direction: row;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 16px;
+    overflow-x: auto;
+    overflow-y: hidden;
+    flex: 1 1 auto;
+    height: 100%;
+  }
+
+  .column {
+    background: var(--col-bg);
+    border-radius: 10px;
+    min-width: 180px;
+    width: 200px;
+    max-height: 100%;
+    display: flex;
+    flex-direction: column;
+    flex: 0 0 auto;
+    border: 1px solid var(--border);
+    overflow: hidden;
+  }
+
+  .column-header {
+    padding: 12px 12px 10px;
+    border-top: 3px solid var(--accent);
+    border-radius: 10px 10px 0 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    flex: 0 0 auto;
+  }
+
+  .column-title {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.6px;
+    text-transform: uppercase;
+    color: var(--text);
+    line-height: 1.3;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .badge {
+    flex: 0 0 auto;
+    background: #0f172a;
+    color: var(--text-muted);
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 700;
+    min-width: 22px;
+    height: 22px;
+    padding: 0 7px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .crew-list {
+    padding: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    overflow-y: auto;
+    flex: 1 1 auto;
+    min-height: 60px;
+  }
+
+  .crew-list:empty::after,
+  .crew-list.is-empty::after {
+    content: "Drop here";
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-muted);
+    font-size: 12px;
+    border: 1.5px dashed var(--border);
+    border-radius: 8px;
+    padding: 18px 8px;
+    opacity: 0.6;
+  }
+
+  /* ---------- Cards ---------- */
+  .user-card {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 8px 8px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: grab;
+    transition: transform 0.1s ease, box-shadow 0.15s ease, background 0.15s ease;
+    user-select: none;
+  }
+  .user-card:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
+    background: #33465e;
+  }
+  .user-card:active { cursor: grabbing; }
+
+  .user-avatar {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    font-weight: 700;
+    color: #fff;
+    flex: 0 0 auto;
+    text-transform: uppercase;
+  }
+
+  .user-name {
+    flex: 1 1 auto;
+    font-size: 13px;
+    font-weight: 500;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .drag-handle {
+    flex: 0 0 auto;
+    color: var(--text-muted);
+    font-size: 14px;
+    cursor: grab;
+    opacity: 0.6;
+    padding: 0 2px;
+  }
+  .user-card:hover .drag-handle { opacity: 1; }
+
+  /* ---------- SortableJS states ---------- */
+  .sortable-ghost {
+    opacity: 0.3;
+    background: #1e3a8a !important;
+    border-color: var(--accent) !important;
+  }
+  .sortable-chosen {
+    box-shadow: 0 0 0 2px var(--accent), 0 0 14px var(--accent-glow);
+  }
+  .sortable-drag { cursor: grabbing; }
+
+  /* ---------- Toast ---------- */
+  #toast {
+    position: fixed;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%) translateY(120px);
+    background: var(--col-bg);
+    color: var(--text);
+    border: 1px solid var(--border);
+    border-left-width: 4px;
+    border-radius: 10px;
+    padding: 12px 18px;
+    font-size: 14px;
+    font-weight: 600;
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5);
+    z-index: 100;
+    opacity: 0;
+    pointer-events: none;
+    transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.4),
+      opacity 0.3s ease;
+    max-width: 90vw;
+  }
+  #toast.show {
+    transform: translateX(-50%) translateY(0);
+    opacity: 1;
+  }
+  #toast.success { border-left-color: #10b981; }
+  #toast.error { border-left-color: #ef4444; }
+
+  /* ---------- Loading overlay ---------- */
+  #overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(15, 23, 42, 0.85);
+    backdrop-filter: blur(2px);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    z-index: 200;
+    transition: opacity 0.3s ease;
+  }
+  #overlay.hidden {
+    opacity: 0;
+    pointer-events: none;
+  }
+  .spinner {
+    width: 42px;
+    height: 42px;
+    border: 4px solid var(--border);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  #overlay .overlay-text { color: var(--text-muted); font-size: 14px; }
+
+  /* ---------- Scrollbars ---------- */
+  ::-webkit-scrollbar { width: 5px; height: 5px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb {
+    background: #475569;
+    border-radius: 999px;
+  }
+  ::-webkit-scrollbar-thumb:hover { background: #64748b; }
+  * { scrollbar-width: thin; scrollbar-color: #475569 transparent; }
+</style>
+</head>
+<body>
+  <header>
+    <div class="logo">EDW</div>
+    <h1>Crew Manager</h1>
+    <span id="status"></span>
+    <button class="btn" id="refreshBtn">↻ Refresh</button>
+  </header>
+
+  <div id="board"></div>
+
+  <div id="toast"></div>
+
+  <div id="overlay">
+    <div class="spinner"></div>
+    <div class="overlay-text">Loading crews…</div>
+  </div>
+
+<script>
+/* ============================================================
+   CONFIG
+   ============================================================ */
+const CONFIG = {
+  API_BASE:    'https://services.leadconnectorhq.com',
+  LOCATION_ID: 'YOUR_LOCATION_ID_HERE',
+  TOKEN:       'YOUR_PRIVATE_INTEGRATION_TOKEN_HERE',
+  EXCLUDE_USER_IDS:       [],      // GHL user IDs of office staff to hide
+  EXCLUDE_ADMIN_ROLES:    true,    // auto-hide role==='admin' users
+  CREW_GROUP_NAME:        'Elite Crew Installations',
+  EXTRA_CALENDAR_NAMES:   ['Tech Measures'],
+  AVATAR_COLORS:  ['#3b82f6','#10b981','#f59e0b','#8b5cf6','#ef4444','#06b6d4','#84cc16'],
+  COLUMN_COLORS:  ['#6b7280','#1d4ed8','#047857','#b45309','#6d28d9','#dc2626','#0369a1'],
+};
+
+/* ============================================================
+   STATE
+   ============================================================ */
+window.state = {
+  users: {},          // userId → user object (filtered installers only)
+  calendars: [],      // ordered crew calendar objects
+  teamMembers: {},    // calendarId → [{userId, priority, isPrimary, ...rest}]
+  memberCache: {},    // calendarId → {userId → full original member object}
+  avatarColorMap: {}, // userId → hex color (stable, assigned on first render)
+  avatarColorIdx: 0,
+};
+
+/* ============================================================
+   API
+   ============================================================ */
+async function apiFetch(path, options = {}) {
+  const url = CONFIG.API_BASE + path;
+  const headers = {
+    'Authorization': 'Bearer ' + CONFIG.TOKEN,
+    'Content-Type': 'application/json',
+    'Version': '2021-07-28',
+    ...(options.headers || {}),
+  };
+  const res = await fetch(url, { ...options, headers });
+  if (!res.ok) {
+    let detail = '';
+    try {
+      const body = await res.text();
+      detail = body ? ' — ' + body : '';
+    } catch (_) { /* ignore */ }
+    throw new Error('API ' + res.status + ' ' + res.statusText + ' on ' + path + detail);
+  }
+  if (res.status === 204) return null;
+  const text = await res.text();
+  return text ? JSON.parse(text) : null;
+}
+
+/* ============================================================
+   HELPERS
+   ============================================================ */
+function userName(u) {
+  if (!u) return 'Unknown';
+  const full = [u.firstName, u.lastName].filter(Boolean).join(' ').trim();
+  return full || u.name || u.email || u.id || 'Unknown';
+}
+
+function initials(name) {
+  const parts = String(name).trim().split(/\s+/).filter(Boolean);
+  if (parts.length === 0) return '??';
+  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+  return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+}
+
+function avatarColor(userId) {
+  if (!state.avatarColorMap[userId]) {
+    const colors = CONFIG.AVATAR_COLORS;
+    state.avatarColorMap[userId] = colors[state.avatarColorIdx % colors.length];
+    state.avatarColorIdx++;
+  }
+  return state.avatarColorMap[userId];
+}
+
+function setStatus(msg) {
+  document.getElementById('status').textContent = msg || '';
+}
+
+let toastTimer = null;
+function showToast(msg, type) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.className = '';
+  el.classList.add(type || 'success', 'show');
+  if (toastTimer) clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.classList.remove('show'), 3000);
+}
+
+function showOverlay(show, text) {
+  const el = document.getElementById('overlay');
+  if (text) el.querySelector('.overlay-text').textContent = text;
+  el.classList.toggle('hidden', !show);
+}
+
+function assignedUserIds() {
+  const set = new Set();
+  for (const calId in state.teamMembers) {
+    for (const m of state.teamMembers[calId]) set.add(m.userId);
+  }
+  return set;
+}
+
+/* ============================================================
+   INIT
+   ============================================================ */
+async function init() {
+  showOverlay(true, 'Loading crews…');
+  setStatus('');
+
+  // reset volatile state (preserve avatar colors for visual stability)
+  state.users = {};
+  state.calendars = [];
+  state.teamMembers = {};
+  state.memberCache = {};
+
+  try {
+    // 1–2. Find the crew group id
+    const groupsResp = await apiFetch('/calendars/groups?locationId=' + encodeURIComponent(CONFIG.LOCATION_ID));
+    const groups = groupsResp.groups || groupsResp.data || [];
+    const crewGroup = groups.find(g => g.name === CONFIG.CREW_GROUP_NAME);
+    const crewGroupId = crewGroup ? crewGroup.id : null;
+    if (!crewGroupId) {
+      console.warn('[EDW] Crew group "' + CONFIG.CREW_GROUP_NAME + '" not found. Available groups:',
+        groups.map(g => g.name));
+    }
+
+    // 3. Get all calendars, filter to crew group + extras
+    const calsResp = await apiFetch('/calendars/?locationId=' + encodeURIComponent(CONFIG.LOCATION_ID));
+    const allCals = calsResp.calendars || calsResp.data || [];
+
+    const isExtra = (name) =>
+      CONFIG.EXTRA_CALENDAR_NAMES.some(x =>
+        String(name || '').toLowerCase().includes(String(x).toLowerCase()));
+
+    const groupCals = allCals
+      .filter(c => crewGroupId && c.groupId === crewGroupId)
+      .sort((a, b) => String(a.name || '').localeCompare(String(b.name || '')));
+
+    const extraCals = allCals.filter(c =>
+      (!crewGroupId || c.groupId !== crewGroupId) && isExtra(c.name));
+
+    const crewCals = [...groupCals, ...extraCals];
+
+    // 4. Populate calendar state
+    state.calendars = crewCals;
+    for (const cal of crewCals) {
+      const members = (cal.teamMembers || []).map(m => ({ ...m }));
+      state.teamMembers[cal.id] = members;
+      state.memberCache[cal.id] = {};
+      for (const m of members) {
+        state.memberCache[cal.id][m.userId] = { ...m };
+      }
+    }
+
+    // 5. Get all users, filter out excluded + admins
+    const usersResp = await apiFetch('/users/?locationId=' + encodeURIComponent(CONFIG.LOCATION_ID));
+    const allUsers = usersResp.users || usersResp.data || [];
+    const excludeSet = new Set(CONFIG.EXCLUDE_USER_IDS);
+
+    for (const u of allUsers) {
+      if (excludeSet.has(u.id)) continue;
+      const role = (u.roles && u.roles.role) || u.role || '';
+      if (CONFIG.EXCLUDE_ADMIN_ROLES && String(role).toLowerCase() === 'admin') continue;
+      state.users[u.id] = u;
+    }
+
+    // 6. Render
+    renderBoard();
+
+    // 7. Hide overlay
+    showOverlay(false);
+    setStatus('Ready · ' + state.calendars.length + ' crews · ' + Object.keys(state.users).length + ' installers');
+
+    // 8. Console table of all users for config help
+    try {
+      console.info('%c[EDW Crew Manager] All users (add office-staff IDs to CONFIG.EXCLUDE_USER_IDS[] and re-upload):',
+        'font-weight:bold');
+      console.table(allUsers.map(u => ({
+        Name: userName(u),
+        ID: u.id,
+        Role: (u.roles && u.roles.role) || u.role || '',
+        Shown: state.users[u.id] ? '✓' : '—',
+      })));
+    } catch (_) { /* ignore */ }
+
+  } catch (err) {
+    // 9. Error handling
+    console.error('[EDW Crew Manager] Init failed:', err);
+    showOverlay(false);
+    setStatus('⚠️ ' + err.message);
+    showToast('❌ Failed to load: ' + err.message, 'error');
+  }
+}
+
+/* ============================================================
+   RENDER
+   ============================================================ */
+function makeCard(userId) {
+  const u = state.users[userId];
+  const name = userName(u);
+  const card = document.createElement('div');
+  card.className = 'user-card';
+  card.dataset.userId = userId;
+
+  const avatar = document.createElement('div');
+  avatar.className = 'user-avatar';
+  avatar.style.background = avatarColor(userId);
+  avatar.textContent = initials(name);
+
+  const nameEl = document.createElement('div');
+  nameEl.className = 'user-name';
+  nameEl.textContent = name;
+  nameEl.title = name;
+
+  const handle = document.createElement('div');
+  handle.className = 'drag-handle';
+  handle.textContent = '⠿';
+
+  card.append(avatar, nameEl, handle);
+  return card;
+}
+
+function makeColumn(calId, title, colorIdx, userIds) {
+  const col = document.createElement('div');
+  col.className = 'column';
+
+  const header = document.createElement('div');
+  header.className = 'column-header';
+  header.style.borderTopColor = CONFIG.COLUMN_COLORS[colorIdx % CONFIG.COLUMN_COLORS.length];
+
+  const titleEl = document.createElement('div');
+  titleEl.className = 'column-title';
+  titleEl.textContent = title;
+  titleEl.title = title;
+
+  const badge = document.createElement('div');
+  badge.className = 'badge';
+  badge.textContent = userIds.length;
+
+  header.append(titleEl, badge);
+
+  const list = document.createElement('div');
+  list.className = 'crew-list';
+  list.dataset.calId = calId;
+  for (const uid of userIds) list.appendChild(makeCard(uid));
+
+  col.append(header, list);
+  return col;
+}
+
+function renderBoard() {
+  const board = document.getElementById('board');
+  board.innerHTML = '';
+
+  // Column 1: Unassigned pool
+  const assigned = assignedUserIds();
+  const unassignedIds = Object.keys(state.users)
+    .filter(id => !assigned.has(id))
+    .sort((a, b) => userName(state.users[a]).localeCompare(userName(state.users[b])));
+
+  board.appendChild(makeColumn('unassigned', '🔄 Unassigned Pool', 0, unassignedIds));
+
+  // Columns 2..N: crew calendars
+  state.calendars.forEach((cal, i) => {
+    const members = state.teamMembers[cal.id] || [];
+    const ids = members
+      .map(m => m.userId)
+      .filter(id => state.users[id]); // only show installers we know about
+    board.appendChild(makeColumn(cal.id, cal.name || 'Calendar', i + 1, ids));
+  });
+
+  // Init SortableJS on all drop zones
+  board.querySelectorAll('.crew-list').forEach(list => {
+    new Sortable(list, {
+      group: 'crew',
+      animation: 150,
+      handle: '.user-card',
+      ghostClass: 'sortable-ghost',
+      chosenClass: 'sortable-chosen',
+      dragClass: 'sortable-drag',
+      onEnd: onDrop,
+    });
+  });
+}
+
+function refreshBadge(calId) {
+  const list = document.querySelector('.crew-list[data-cal-id="' + calId + '"]');
+  if (!list) return;
+  const badge = list.parentElement.querySelector('.badge');
+  if (badge) badge.textContent = list.children.length;
+}
+
+/* ============================================================
+   DRAG & DROP → SAVE
+   ============================================================ */
+async function onDrop(evt) {
+  const userId = evt.item.dataset.userId;
+  const fromCalId = evt.from.dataset.calId;
+  const toCalId = evt.to.dataset.calId;
+
+  if (fromCalId === toCalId) return;
+
+  // Update source
+  if (fromCalId !== 'unassigned') {
+    state.teamMembers[fromCalId] = (state.teamMembers[fromCalId] || [])
+      .filter(m => m.userId !== userId);
+  }
+
+  // Update destination
+  if (toCalId !== 'unassigned') {
+    const existing = state.teamMembers[toCalId] || [];
+    const cached = state.memberCache[toCalId] && state.memberCache[toCalId][userId];
+    const newEntry = cached
+      ? cached
+      : { userId, priority: 0.5, isPrimary: existing.length === 0 };
+    state.teamMembers[toCalId] = [...existing, newEntry];
+    if (!state.memberCache[toCalId]) state.memberCache[toCalId] = {};
+    state.memberCache[toCalId][userId] = newEntry;
+  }
+
+  refreshBadge(fromCalId);
+  refreshBadge(toCalId);
+
+  // Persist — NEVER include locationId in a calendar PUT body (GHL 422)
+  const toSave = [fromCalId, toCalId].filter(id => id !== 'unassigned');
+  setStatus('💾 Saving…');
+  try {
+    await Promise.all(toSave.map(calId =>
+      apiFetch('/calendars/' + calId, {
+        method: 'PUT',
+        body: JSON.stringify({ teamMembers: state.teamMembers[calId] }),
+      })
+    ));
+    setStatus('');
+    showToast('✅ Crew updated!', 'success');
+  } catch (err) {
+    console.error('[EDW Crew Manager] Save failed:', err);
+    showToast('❌ Save failed: ' + err.message, 'error');
+    await init(); // revert to server truth
+  }
+}
+
+/* ============================================================
+   BOOT
+   ============================================================ */
+document.getElementById('refreshBtn').addEventListener('click', () => init());
+init();
+</script>
+</body>
+</html>
