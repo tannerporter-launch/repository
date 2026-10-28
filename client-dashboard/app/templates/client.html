@@ -1,0 +1,20 @@
+{% extends "base.html" %}{% block body %}
+<h1>{{ client.name }}</h1>
+<div class="card"><form method="post" action="/clients/{{ client.id }}" class="row">
+<input name="name" value="{{ client.name }}" required><input name="contact" value="{{ client.contact }}" placeholder="Contact">
+<input name="email" type="email" value="{{ client.email }}" placeholder="Email">
+<select name="status">{% for s in client_statuses %}<option {{ 'selected' if s == client.status }}>{{ s }}</option>{% endfor %}</select>
+<textarea name="notes" rows="3" style="width:100%" placeholder="Notes">{{ client.notes }}</textarea>
+<button>Save</button></form>
+<form method="post" action="/clients/{{ client.id }}/delete" onsubmit="return confirm('Delete client and all its projects?')">
+<button class="danger" style="margin-top:8px">Delete client</button></form></div>
+<div class="card"><h3>Projects</h3><table><tr><th>Name</th><th>Status</th><th>Due</th><th>Budget</th><th>Open tasks</th></tr>
+{% for p in projects %}<tr><td><a href="/projects/{{ p.id }}">{{ p.name }}</a></td><td><span class="pill">{{ p.status }}</span></td>
+<td>{{ p.due_date }}</td><td>${{ '%.0f' % p.budget }}</td><td>{{ p.open_tasks }}</td></tr>
+{% else %}<tr><td colspan="5" class="muted">No projects yet.</td></tr>{% endfor %}</table></div>
+<div class="card"><h3>Add project</h3><form method="post" action="/clients/{{ client.id }}/projects" class="row">
+<input name="name" placeholder="Project name" required><input name="due_date" type="date">
+<input name="budget" type="number" step="0.01" placeholder="Budget" value="0">
+<select name="status">{% for s in project_statuses %}<option>{{ s }}</option>{% endfor %}</select>
+<button>Add</button></form></div>
+{% endblock %}
