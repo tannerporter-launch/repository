@@ -1,0 +1,14 @@
+{% extends "base.html" %}{% block body %}
+<h1>Clients</h1>
+<p>{% for s in statuses %}<a href="/clients?status={{ s }}">{{ s }}</a> · {% endfor %}<a href="/clients">all</a></p>
+<div class="card"><table><tr><th>Name</th><th>Status</th><th>Contact</th><th>Projects</th></tr>
+{% for c in clients %}<tr><td><a href="/clients/{{ c.id }}">{{ c.name }}</a></td>
+<td><span class="pill">{{ c.status }}</span></td><td>{{ c.contact }}</td><td>{{ c.projects }}</td></tr>
+{% else %}<tr><td colspan="4" class="muted">No clients yet.</td></tr>{% endfor %}</table></div>
+<div class="card"><h3>Add client</h3>
+<form method="post" action="/clients" class="row">
+<input name="name" placeholder="Name" required><input name="contact" placeholder="Contact">
+<input name="email" type="email" placeholder="Email">
+<select name="status">{% for s in statuses %}<option>{{ s }}</option>{% endfor %}</select>
+<button>Add</button></form></div>
+{% endblock %}

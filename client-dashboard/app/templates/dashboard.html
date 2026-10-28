@@ -1,0 +1,15 @@
+{% extends "base.html" %}{% block body %}
+<h1>Dashboard</h1>
+<div class="stats">
+<div class="card stat"><b>{{ stats.clients }}</b><span class="muted">Active clients</span></div>
+<div class="card stat"><b>{{ stats.projects }}</b><span class="muted">Projects in flight</span></div>
+<div class="card stat"><b>{{ stats.open_tasks }}</b><span class="muted">Open tasks</span></div>
+</div>
+<div class="card"><h3>Overdue tasks</h3>
+{% for t in overdue %}<div><span class="bad">{{ t.due_date }}</span> · {{ t.title }}
+<span class="muted">— {{ t.client }} / <a href="/projects/{{ t.pid }}">{{ t.project }}</a></span></div>
+{% else %}<p class="muted">Nothing overdue.</p>{% endfor %}</div>
+<div class="card"><h3>Blocked projects</h3>
+{% for p in blocked %}<div><a href="/projects/{{ p.id }}">{{ p.name }}</a> <span class="muted">— {{ p.client }}</span></div>
+{% else %}<p class="muted">None blocked.</p>{% endfor %}</div>
+{% endblock %}
